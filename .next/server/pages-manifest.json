@@ -2,9 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/api/notify-admin": "pages/api/notify-admin.js",
-  "/api/admin-shop": "pages/api/admin-shop.js",
-  "/api/send-email": "pages/api/send-email.js",
   "/": "pages/index.js",
-  "/contribute/update": "pages/contribute/update.js"
+  "/admin": "pages/admin.js",
+  "/about": "pages/about.js"
 }
