@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const html = `
     <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#f8fafc;border-radius:16px;">
-      <img src="https://mayapabiyahe.vercel.app/assets/mayap-logo.png" width="60" style="margin-bottom:16px;" />
+      <img src="https://kumpunigo.vercel.app/assets/kumpuni-go-logo.png" width="60" style="margin-bottom:16px;" />
       <h2 style="color:#1a3a3a;margin:0 0 8px;">
         ${type === 'update' ? '✏️ Update Request' : '📍 New Contribution'}
       </h2>
@@ -40,13 +40,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Review in Admin Panel →
       </a>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-      <p style="color:#aaa;font-size:12px;">Mayap A Biyahe – Admin Notification</p>
+      <p style="color:#aaa;font-size:12px;">Kumpuni Go – Admin Notification</p>
     </div>
   `;
 
   try {
     await transporter.sendMail({
-      from: `"Mayap A Biyahe" <${process.env.GMAIL_USER}>`,
+      from: `"Kumpuni Go" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER, // Admin receives at same Gmail
       subject,
       html,

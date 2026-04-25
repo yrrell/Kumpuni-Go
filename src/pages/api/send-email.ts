@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     await transporter.sendMail({
-      from: `"Mayap A Biyahe" <${process.env.GMAIL_USER}>`,
+      from: `"Kumpuni Go" <${process.env.GMAIL_USER}>`,
       to,
       subject,
       html,
