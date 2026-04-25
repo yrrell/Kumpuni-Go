@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mayap-green: #27ae60;
+  --mayap-dark: #1a3a3a;
+}
+
+body {
+  @apply bg-[#f8fafc] text-slate-900 antialiased;
+  font-family: sans-serif;
+}
+
+/* Custom card shadow for that premium feel */
+.aura-card {
+  @apply bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-all active:scale-[0.98];
+}
+
+.nav-active {
+  @apply text-[#27ae60] font-bold;
+}
