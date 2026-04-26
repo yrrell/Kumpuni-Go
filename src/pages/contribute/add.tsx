@@ -44,7 +44,8 @@ export default function AddShop() {
 
   // Auth + ban check
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user ?? null;
       if (!user) { router.replace('/auth/signin?redirect=/contribute/add'); return; }
       setUser(user);
       const { data: banData } = await supabase
