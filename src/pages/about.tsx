@@ -1,7 +1,7 @@
 // src/pages/about.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { ChevronLeft, Mail, Globe, Facebook } from 'lucide-react';
+import { ChevronLeft, Mail, Globe, Facebook, X } from 'lucide-react';
 
 const FEATURES = [
   { emoji: '📍', title: 'Find Nearby Shops', desc: 'Locate the nearest vulcanizing and motor shops, sorted by open status and distance from you.' },
@@ -16,9 +16,41 @@ const FEATURES = [
 
 export default function About() {
   const router = useRouter();
+  const [showQR, setShowQR] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
+
+      {/* ── GCash QR Modal ── */}
+      {showQR && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center px-6"
+          onClick={() => setShowQR(false)}
+        >
+          <div
+            className="bg-white rounded-[2rem] p-6 w-full max-w-xs flex flex-col items-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between w-full mb-4">
+              <p className="text-[#1a3a3a] font-black text-sm uppercase tracking-widest">GCash QR</p>
+              <button onClick={() => setShowQR(false)} className="text-gray-400 active:text-gray-700">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="w-full aspect-square rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+              <img
+                src="/assets/gcash-qr.png"
+                alt="GCash QR Code"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <p className="text-gray-400 text-[11px] font-bold mt-4 text-center leading-relaxed">
+              Open your GCash app and scan this QR code to send a donation. Thank you! 💚
+            </p>
+            <p className="text-[#1a3a3a] font-black text-xs mt-2">JO*N LE**Y T.</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Sticky Header ── */}
       <div className="bg-[#1a3a3a] px-5 py-4 flex items-center gap-3 sticky top-0 z-50">
@@ -38,7 +70,7 @@ export default function About() {
           <span className="text-[#27ae60] text-[11px] font-black tracking-widest uppercase">Version 1.0.0</span>
         </div>
         <p className="text-gray-400 text-[12px] font-bold mt-4 max-w-xs leading-relaxed">
-          Your community-powered guide to finding the nearest vulcanizing and motor repair shops  anywhere in the Philippines.
+          Your community-powered guide to finding the nearest vulcanizing and motor repair shops anywhere in the Philippines.
         </p>
       </div>
 
@@ -81,13 +113,13 @@ export default function About() {
         <div className="bg-white rounded-[1.5rem] p-5 border border-gray-100 shadow-sm">
           <h2 className="text-[#1a3a3a] font-black text-xs uppercase tracking-widest mb-4">Developer</h2>
           <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#1a3a3a] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
-          <img 
-            src="/assets/developer.png" 
-            alt="Developer Profile" 
-            className="w-full h-full object-cover"
-           />
-          </div>
+            <div className="w-14 h-14 bg-[#1a3a3a] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
+              <img
+                src="/assets/developer.png"
+                alt="Developer Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="flex-1">
               <p className="text-[#1a3a3a] font-black text-sm">John Lerry Teodoro</p>
               <p className="text-gray-400 text-[11px] font-bold">Full Stack Developer</p>
@@ -106,6 +138,7 @@ export default function About() {
         <div className="bg-white rounded-[1.5rem] p-5 border border-gray-100 shadow-sm">
           <h2 className="text-[#1a3a3a] font-black text-xs uppercase tracking-widest mb-4">Connect</h2>
           <div className="space-y-3">
+
             <a href="mailto:kumpunigo@gmail.com"
               className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
               <div className="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center">
@@ -118,14 +151,14 @@ export default function About() {
               <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
             </a>
 
-            <a href="https://kumpunigo.vercel.app" target="_blank" rel="noopener noreferrer"
+            <a href="https://kumpuni-go.vercel.app/" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
               <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
                 <Globe size={16} className="text-blue-500" />
               </div>
               <div>
                 <p className="text-[#1a3a3a] font-black text-xs">Vercel</p>
-                <p className="text-gray-400 text-[10px] font-bold">kumpunigo.vercel.app</p>
+                <p className="text-gray-400 text-[10px] font-bold">kumpuni-go.vercel.app</p>
               </div>
               <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
             </a>
@@ -141,6 +174,23 @@ export default function About() {
               </div>
               <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
             </a>
+
+            <button
+              onClick={() => setShowQR(true)}
+              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
+              <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" r="24" fill="#007DFE"/>
+                  <path d="M34 24.5h-9v-2h6.8A8.5 8.5 0 1 0 24 32.5v-4h2v6a10.5 10.5 0 1 1 8-10z" fill="white"/>
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-[#1a3a3a] font-black text-xs">Support via GCash</p>
+                <p className="text-gray-400 text-[10px] font-bold">Tap to show QR code</p>
+              </div>
+              <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
+            </button>
+
           </div>
         </div>
 
