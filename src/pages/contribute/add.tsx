@@ -19,7 +19,6 @@ export default function AddShop() {
   const mapInitialized = useRef(false);
 
   const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,20 +44,13 @@ export default function AddShop() {
 
   // Auth + ban check
   useEffect(() => {
-    const checkAuth = async (attempt = 0) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        const { data: banData } = await supabase.from('banned_users').select('is_banned').eq('email', session.user.email).single();
-        if (banData?.is_banned) setIsBanned(true);
-        setAuthLoading(false);
-      } else if (attempt < 5) {
-        setTimeout(() => checkAuth(attempt + 1), 300);
-      } else {
-        router.replace('/auth/signin?redirect=/contribute/add');
-      }
-    };
-    checkAuth();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.replace('/auth/signin?redirect=/contribute/add'); return; }
+      setUser(user);
+      const { data: banData } = await supabase
+        .from('banned_users').select('is_banned').eq('email', user.email).single();
+      if (banData?.is_banned) setIsBanned(true);
+    });
   }, []);
 
   // Load Leaflet from CDN
@@ -237,7 +229,6 @@ export default function AddShop() {
     setLoading(false);
   };
 
-  if (authLoading) return (<div className="min-h-screen flex items-center justify-center"><p className="animate-pulse font-black uppercase text-sm">Loading...</p></div>);
   if (isBanned) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a3a3a] text-center">
       <p className="text-5xl mb-4">🚫</p>
