@@ -13,23 +13,27 @@ export default function ContributionHistory() {
   const [banInfo, setBanInfo] = useState<any>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null;
-      if (!user) { router.replace('/auth/signin?redirect=/contribute/history'); setAuthLoading(false); return; }
-      setUser(user); setAuthLoading(false);
-
-      const { data: shopData } = await supabase
-        .from('shops').select('*')
-        .eq('email', user.email)
-        .order('created_at', { ascending: false });
-      setShops(shopData || []);
-
-      const { data: banData } = await supabase
-        .from('banned_users').select('*').eq('email', user.email).single();
-      if (banData) setBanInfo(banData);
-
-      setLoading(false);
-    });
+    const checkAuth = async (attempt = 0) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setAuthLoading(false);
+        const { data: shopData } = await supabase
+          .from('shops').select('*')
+          .eq('email', session.user.email)
+          .order('created_at', { ascending: false });
+        setShops(shopData || []);
+        setLoading(false);
+        const { data: banData } = await supabase
+          .from('banned_users').select('*').eq('email', session.user.email).single();
+        if (banData) setBanInfo(banData);
+      } else if (attempt < 5) {
+        setTimeout(() => checkAuth(attempt + 1), 300);
+      } else {
+        router.replace('/auth/signin?redirect=/contribute/history');
+      }
+    };
+    checkAuth();
   }, []);
 
   const handleRestore = (shop: any) => {

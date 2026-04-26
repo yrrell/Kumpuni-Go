@@ -45,16 +45,20 @@ export default function AddShop() {
 
   // Auth + ban check
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null;
-      if (!user) { setAuthLoading(false); router.replace('/auth/signin?redirect=/contribute/add'); return; }
-      setUser(user);
-      setAuthLoading(false);
-      const { data: banData } = await supabase
-        .from('banned_users').select('is_banned').eq('email', user.email).single();
-      if (banData?.is_banned) setIsBanned(true);
-    });
-    return () => subscription.unsubscribe();
+    const checkAuth = async (attempt = 0) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        const { data: banData } = await supabase.from('banned_users').select('is_banned').eq('email', session.user.email).single();
+        if (banData?.is_banned) setIsBanned(true);
+        setAuthLoading(false);
+      } else if (attempt < 5) {
+        setTimeout(() => checkAuth(attempt + 1), 300);
+      } else {
+        router.replace('/auth/signin?redirect=/contribute/add');
+      }
+    };
+    checkAuth();
   }, []);
 
   // Load Leaflet from CDN
