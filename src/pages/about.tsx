@@ -122,7 +122,7 @@ export default function About() {
             </div>
             <div className="flex-1">
               <p className="text-[#1a3a3a] font-black text-sm">John Lerry Teodoro</p>
-              <p className="text-gray-400 text-[11px] font-bold">Full Stack Developer</p>
+              <p className="text-gray-400 text-[11px] font-bold">Junior Web Developer</p>
               <p className="text-[#27ae60] text-[11px] font-bold mt-0.5">jlerryteodoro@gmail.com</p>
             </div>
           </div>
