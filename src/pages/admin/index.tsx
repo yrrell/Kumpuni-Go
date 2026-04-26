@@ -5,6 +5,9 @@ import { sendContributionStatusEmail, sendBanEmail } from '../../lib/mailer';
 import { CheckCircle, XCircle, Trash2, Edit3, RefreshCw, AlertTriangle, Ban, X } from 'lucide-react';
 
 // Read-only client for fetching data (uses anon key — reads only)
+// Treats both null and empty string (stored by older add.tsx) as "no evidence"
+const hasEvidence = (url: any): url is string => typeof url === 'string' && url.trim().length > 0;
+
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -580,8 +583,8 @@ export default function AdminPanel() {
                 )}
                 <p className="text-gray-300 text-[10px]">By: {upd.email} • {new Date(upd.created_at).toLocaleDateString()}</p>
 
-                {upd.evidence_url && (
-                  <button onClick={() => setSelectedEvidence(upd.evidence_url)}
+                {hasEvidence(upd.evidence_url) && (
+                  <button onClick={() => setSelectedEvidence(upd.evidence_url!)}
                     className="w-full bg-blue-50 text-blue-500 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 active:opacity-70">
                     📷 View Evidence Photo
                   </button>
@@ -638,8 +641,8 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {shop.evidence_url && (
-                  <button onClick={() => setSelectedEvidence(shop.evidence_url)}
+                {hasEvidence(shop.evidence_url) && (
+                  <button onClick={() => setSelectedEvidence(shop.evidence_url!)}
                     className="text-[#27ae60] text-[11px] font-black block">📷 View Evidence</button>
                 )}
 
@@ -662,15 +665,15 @@ export default function AdminPanel() {
                     </button>
                     {/* Evidence photo button – always shown; disabled when no photo uploaded */}
                     <button
-                      onClick={() => shop.evidence_url && setSelectedEvidence(shop.evidence_url)}
-                      disabled={!shop.evidence_url}
-                      title={shop.evidence_url ? 'View evidence photo' : 'No evidence photo uploaded'}
+                      onClick={() => hasEvidence(shop.evidence_url) && setSelectedEvidence(shop.evidence_url)}
+                      disabled={!hasEvidence(shop.evidence_url)}
+                      title={hasEvidence(shop.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
                       className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
-                        shop.evidence_url
+                        hasEvidence(shop.evidence_url)
                           ? 'bg-blue-50 text-blue-500 active:opacity-70'
                           : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
                       }`}>
-                      📷 {shop.evidence_url ? 'View Evidence Photo' : 'No Evidence Photo'}
+                      📷 {hasEvidence(shop.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
                     </button>
                   </>}
 
@@ -686,15 +689,15 @@ export default function AdminPanel() {
                     </button>
                     {/* Evidence photo button – always shown; disabled when no photo uploaded */}
                     <button
-                      onClick={() => shop.evidence_url && setSelectedEvidence(shop.evidence_url)}
-                      disabled={!shop.evidence_url}
-                      title={shop.evidence_url ? 'View evidence photo' : 'No evidence photo uploaded'}
+                      onClick={() => hasEvidence(shop.evidence_url) && setSelectedEvidence(shop.evidence_url)}
+                      disabled={!hasEvidence(shop.evidence_url)}
+                      title={hasEvidence(shop.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
                       className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
-                        shop.evidence_url
+                        hasEvidence(shop.evidence_url)
                           ? 'bg-blue-50 text-blue-500 active:opacity-70'
                           : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
                       }`}>
-                      📷 {shop.evidence_url ? 'View Evidence Photo' : 'No Evidence Photo'}
+                      📷 {hasEvidence(shop.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
                     </button>
                   </>}
 
