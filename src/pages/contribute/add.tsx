@@ -19,7 +19,6 @@ export default function AddShop() {
   const mapInitialized = useRef(false);
 
   const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,20 +44,13 @@ export default function AddShop() {
 
   // Auth + ban check
   useEffect(() => {
-    const checkAuth = async (attempt = 0) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        const { data: banData } = await supabase.from('banned_users').select('is_banned').eq('email', session.user.email).single();
-        if (banData?.is_banned) setIsBanned(true);
-        setAuthLoading(false);
-      } else if (attempt < 5) {
-        setTimeout(() => checkAuth(attempt + 1), 300);
-      } else {
-        router.replace('/auth/signin?redirect=/contribute/add');
-      }
-    };
-    checkAuth();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.replace('/auth/signin?redirect=/contribute/add'); return; }
+      setUser(user);
+      const { data: banData } = await supabase
+        .from('banned_users').select('is_banned').eq('email', user.email).single();
+      if (banData?.is_banned) setIsBanned(true);
+    });
   }, []);
 
   // Load Leaflet from CDN
@@ -198,20 +190,14 @@ export default function AddShop() {
     const finalLng = pinLocation?.lng ?? location?.lng ?? 120.5333;
     const brgy = [form.municipality, form.province].filter(Boolean).join(', ');
 
-    let evidence_url: string | null = null;
+    let evidence_url = '';
     if (evidenceFile) {
       const fileName = `evidence/${user.id}_${Date.now()}`;
-      const { data: up, error: upErr } = await supabase.storage
+      const { data: up } = await supabase.storage
         .from('contributions').upload(fileName, evidenceFile, { upsert: true });
-      if (upErr) {
-        console.error('Evidence upload failed:', upErr.message);
-        const proceed = confirm(
-          '⚠️ Evidence photo failed to upload (' + upErr.message + ').\n\nContinue submitting without the evidence photo?'
-        );
-        if (!proceed) { setLoading(false); return; }
-      } else if (up) {
+      if (up) {
         const { data: pub } = supabase.storage.from('contributions').getPublicUrl(fileName);
-        evidence_url = pub.publicUrl || null;
+        evidence_url = pub.publicUrl;
       }
     }
 
@@ -243,7 +229,6 @@ export default function AddShop() {
     setLoading(false);
   };
 
-  if (authLoading) return (<div className="min-h-screen flex items-center justify-center"><p className="animate-pulse font-black uppercase text-sm">Loading...</p></div>);
   if (isBanned) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a3a3a] text-center">
       <p className="text-5xl mb-4">🚫</p>
