@@ -8,6 +8,10 @@ import { ChevronLeft, CheckCircle, Camera, Save } from 'lucide-react';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// Sanitise a string to be safe for use in a storage path
+const safeName = (s: string) =>
+  s.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 40);
+
 export default function AddShop() {
   const { location } = useLocation();
   const router = useRouter();
@@ -15,7 +19,6 @@ export default function AddShop() {
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  // Prevent GPS location updates from re-panning the map after initial load
   const mapInitialized = useRef(false);
 
   const [user, setUser] = useState<any>(null);
@@ -26,6 +29,7 @@ export default function AddShop() {
   const [geocoding, setGeocoding] = useState(false);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [pinLocation, setPinLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [leafletReady, setLeafletReady] = useState(false);
   const [pinSaved, setPinSaved] = useState(false);
@@ -67,8 +71,6 @@ export default function AddShop() {
   }, []);
 
   // Init Leaflet map — runs ONCE when leaflet is ready.
-  // We intentionally do NOT react to location changes here.
-  // The ⊕ target button is the only way to snap back to GPS.
   useEffect(() => {
     if (!leafletReady || !mapDivRef.current || mapRef.current) return;
 
@@ -116,10 +118,6 @@ export default function AddShop() {
     markerRef.current = marker;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletReady]);
-
-  // NOTE: The old useEffect([location?.lat, location?.lng]) that auto-panned
-  // the map is INTENTIONALLY REMOVED. It caused the pin to snap back to GPS
-  // whenever the user zoomed/panned. Use the ⊕ button instead.
 
   const reverseGeocode = async (lat: number, lng: number) => {
     setGeocoding(true);
@@ -190,14 +188,28 @@ export default function AddShop() {
     const finalLng = pinLocation?.lng ?? location?.lng ?? 120.5333;
     const brgy = [form.municipality, form.province].filter(Boolean).join(', ');
 
+    // ── Upload evidence photo with descriptive filename ──
     let evidence_url = '';
     if (evidenceFile) {
-      const fileName = `evidence/${user.id}_${Date.now()}`;
-      const { data: up } = await supabase.storage
-        .from('contributions').upload(fileName, evidenceFile, { upsert: true });
-      if (up) {
-        const { data: pub } = supabase.storage.from('contributions').getPublicUrl(fileName);
-        evidence_url = pub.publicUrl;
+      try {
+        setUploadProgress('Uploading evidence photo...');
+        // Filename: evidence/SHOPNAME_USERID_TIMESTAMP.ext
+        const ext = evidenceFile.name.split('.').pop() || 'jpg';
+        const shopSlug = safeName(form.name);
+        const fileName = `evidence/new_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
+        const { data: up, error: upErr } = await supabase.storage
+          .from('contributions')
+          .upload(fileName, evidenceFile, { upsert: true, contentType: evidenceFile.type });
+        if (upErr) {
+          console.error('Evidence upload error:', upErr.message);
+        } else if (up) {
+          const { data: pub } = supabase.storage.from('contributions').getPublicUrl(fileName);
+          evidence_url = pub.publicUrl;
+        }
+        setUploadProgress(null);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        setUploadProgress(null);
       }
     }
 
@@ -212,6 +224,7 @@ export default function AddShop() {
       close_time: form.closeTime,
       work_days: form.workDays,
       status: 'pending',
+      is_approved: false,
       user_id: user.id,
       email: user.email,
       evidence_url,
@@ -394,11 +407,13 @@ export default function AddShop() {
           </div>
         </div>
 
+        {/* ── Evidence Photo ── */}
         <div>
           <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Evidence Photo</label>
           <div className="bg-blue-50 rounded-2xl p-3 mt-1 mb-2">
             <p className="text-blue-600 text-[11px] font-bold leading-relaxed">
               📸 Upload a clear photo of the actual shop front to help admin verify your submission faster.
+              The photo will be stored under the shop name so the admin can identify it easily.
             </p>
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleEvidenceChange} className="hidden" />
@@ -408,15 +423,21 @@ export default function AddShop() {
               <div className="relative">
                 <img src={evidencePreview} alt="Evidence" className="w-full max-h-48 object-cover" />
                 <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1"><Camera size={14} className="text-white" /></div>
+                <div className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
+                  <span className="text-white text-[10px] font-bold">Tap to change photo</span>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-gray-400 p-6">
                 <Camera size={28} />
                 <span className="text-[11px] font-black uppercase">Tap to Upload Photo</span>
-                <span className="text-[10px]">Clear photo of the actual shop</span>
+                <span className="text-[10px]">Clear photo of the actual shop front</span>
               </div>
             )}
           </button>
+          {uploadProgress && (
+            <p className="text-[10px] text-[#27ae60] font-bold pl-1 mt-1 animate-pulse">{uploadProgress}</p>
+          )}
         </div>
 
         <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">

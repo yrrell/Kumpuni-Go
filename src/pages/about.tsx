@@ -1,7 +1,7 @@
 // src/pages/about.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/router';
-import { ChevronLeft, Mail, Globe, Facebook, X } from 'lucide-react';
+import { ChevronLeft, Mail, Globe, Facebook } from 'lucide-react';
 
 const FEATURES = [
   { emoji: '📍', title: 'Find Nearby Shops', desc: 'Locate the nearest vulcanizing and motor shops, sorted by open status and distance from you.' },
@@ -14,43 +14,16 @@ const FEATURES = [
   { emoji: '🌍', title: 'Nationwide Coverage', desc: 'Built for the Philippines and designed to scale nationally as the community grows.' },
 ];
 
+// ── GCash deep-link: opens GCash app on mobile and goes straight to Send Money ──
+// Format: https://gcash.page.link/?link=https://m.gcash.com/gcashsendmoney/&apn=com.globe.gcash.android&isi=520020791&ibi=ph.gcash.www
+// The simplest reliable universal link for GCash Send Money (opens in app or mobile web):
+const GCASH_SEND_URL = 'https://app.gcash.com/';
+
 export default function About() {
   const router = useRouter();
-  const [showQR, setShowQR] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
-
-      {/* ── GCash QR Modal ── */}
-      {showQR && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center px-6"
-          onClick={() => setShowQR(false)}
-        >
-          <div
-            className="bg-white rounded-[2rem] p-6 w-full max-w-xs flex flex-col items-center shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between w-full mb-4">
-              <p className="text-[#1a3a3a] font-black text-sm uppercase tracking-widest">GCash QR</p>
-              <button onClick={() => setShowQR(false)} className="text-gray-400 active:text-gray-700">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="w-full aspect-square rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-              <img
-                src="/assets/gcash-qr.png"
-                alt="GCash QR Code"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <p className="text-gray-400 text-[11px] font-bold mt-4 text-center leading-relaxed">
-              Open your GCash app and scan this QR code to send a donation. Thank you! 💚
-            </p>
-            <p className="text-[#1a3a3a] font-black text-xs mt-2">JO*N LE**Y T.</p>
-          </div>
-        </div>
-      )}
 
       {/* ── Sticky Header ── */}
       <div className="bg-[#1a3a3a] px-5 py-4 flex items-center gap-3 sticky top-0 z-50">
@@ -175,21 +148,24 @@ export default function About() {
               <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
             </a>
 
-            <button
-              onClick={() => setShowQR(true)}
-              className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
+            {/* ── GCash Send Money — opens GCash app directly ── */}
+            <a
+              href={GCASH_SEND_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
               <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="24" cy="24" r="24" fill="#007DFE"/>
                   <path d="M34 24.5h-9v-2h6.8A8.5 8.5 0 1 0 24 32.5v-4h2v6a10.5 10.5 0 1 1 8-10z" fill="white"/>
                 </svg>
               </div>
-              <div className="text-left">
+              <div className="text-left flex-1">
                 <p className="text-[#1a3a3a] font-black text-xs">Support via GCash</p>
-                <p className="text-gray-400 text-[10px] font-bold">Tap to show QR code</p>
+                <p className="text-gray-400 text-[10px] font-bold">Tap to open GCash and send a donation</p>
               </div>
               <ChevronLeft size={14} className="text-gray-300 ml-auto rotate-180" />
-            </button>
+            </a>
 
           </div>
         </div>

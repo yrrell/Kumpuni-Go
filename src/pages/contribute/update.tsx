@@ -18,6 +18,10 @@ const CHANGE_OPTIONS = [
   { key: 'other',    label: '✏️ Other (describe below)' },
 ];
 
+// Sanitise a string to be safe for use in a storage path
+const safeName = (s: string) =>
+  s.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 40);
+
 export default function UpdateShop() {
   const router = useRouter();
   const { location } = useLocation();
@@ -33,6 +37,7 @@ export default function UpdateShop() {
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [allShops, setAllShops] = useState<any[]>([]);
 
   const [selectedChanges, setSelectedChanges] = useState<string[]>([]);
@@ -186,6 +191,8 @@ export default function UpdateShop() {
       workDays: shop.work_days ?? [1, 2, 3, 4, 5, 6],
     });
     setSelectedChanges([]);
+    setEvidenceFile(null);
+    setEvidencePreview(null);
   };
 
   const toggleChange = (key: string) => {
@@ -217,14 +224,28 @@ export default function UpdateShop() {
     }
     setLoading(true);
 
+    // ── Upload evidence photo with descriptive filename ──
     let evidence_url = '';
     if (evidenceFile) {
-      const fileName = `evidence/update_${user.id}_${Date.now()}`;
-      const { data: uploadData, error: uploadErr } = await supabase.storage
-        .from('contributions').upload(fileName, evidenceFile);
-      if (!uploadErr && uploadData) {
-        const { data: publicUrl } = supabase.storage.from('contributions').getPublicUrl(fileName);
-        evidence_url = publicUrl.publicUrl;
+      try {
+        setUploadProgress('Uploading evidence photo...');
+        const ext = evidenceFile.name.split('.').pop() || 'jpg';
+        // Filename: evidence/update_SHOPNAME_USERID_TIMESTAMP.ext
+        const shopSlug = safeName(selectedShop.name);
+        const fileName = `evidence/update_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('contributions')
+          .upload(fileName, evidenceFile, { contentType: evidenceFile.type });
+        if (uploadErr) {
+          console.error('Evidence upload error:', uploadErr.message);
+        } else if (uploadData) {
+          const { data: publicUrl } = supabase.storage.from('contributions').getPublicUrl(fileName);
+          evidence_url = publicUrl.publicUrl;
+        }
+        setUploadProgress(null);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        setUploadProgress(null);
       }
     }
 
@@ -238,7 +259,6 @@ export default function UpdateShop() {
       ? [form.municipality, form.province].filter(Boolean).join(', ')
       : form.brgy;
 
-    // Build insert object — only include columns that exist in the DB schema
     const insertData: any = {
       shop_id: selectedShop.id,
       original_name: selectedShop.name,
@@ -250,7 +270,6 @@ export default function UpdateShop() {
       updated_close_time: form.closeTime,
       updated_work_days: form.workDays,
       update_note: updateNote,
-      // change_types is text[] in DB — safe to include
       change_types: selectedChanges,
       evidence_url,
       status: 'pending',
@@ -465,15 +484,25 @@ export default function UpdateShop() {
               </div>
             )}
 
+            {/* ── Evidence Photo ── */}
             <div>
               <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Evidence Photo (optional)</label>
+              <div className="bg-blue-50 rounded-2xl p-3 mt-1 mb-2">
+                <p className="text-blue-600 text-[11px] font-bold leading-relaxed">
+                  📸 Upload a photo showing the change to help the admin verify faster.
+                  The photo is stored under the shop name so the admin can identify it easily.
+                </p>
+              </div>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleEvidenceChange} className="hidden" />
               <button type="button" onClick={() => fileInputRef.current?.click()}
-                className="mt-2 w-full border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden active:bg-gray-50">
+                className="mt-1 w-full border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden active:bg-gray-50">
                 {evidencePreview ? (
                   <div className="relative">
                     <img src={evidencePreview} alt="Evidence" className="w-full max-h-48 object-cover" />
                     <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1"><Camera size={14} className="text-white" /></div>
+                    <div className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
+                      <span className="text-white text-[10px] font-bold">Tap to change photo</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-gray-400 p-6">
@@ -483,6 +512,9 @@ export default function UpdateShop() {
                   </div>
                 )}
               </button>
+              {uploadProgress && (
+                <p className="text-[10px] text-[#27ae60] font-bold pl-1 mt-1 animate-pulse">{uploadProgress}</p>
+              )}
             </div>
 
             <button type="submit" disabled={loading}

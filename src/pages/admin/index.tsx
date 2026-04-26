@@ -4,9 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 import { sendContributionStatusEmail, sendBanEmail } from '../../lib/mailer';
 import { CheckCircle, XCircle, Trash2, Edit3, RefreshCw, AlertTriangle, Ban, X } from 'lucide-react';
 
-// Read-only client for fetching data (uses anon key — reads only)
 // Treats both null and empty string (stored by older add.tsx) as "no evidence"
-const hasEvidence = (url: any): url is string => typeof url === 'string' && url.trim().length > 0;
+const hasEvidence = (url: any): url is string =>
+  typeof url === 'string' && url.trim().length > 0 && url.trim() !== 'EMPTY';
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -91,6 +91,7 @@ export default function AdminPanel() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [{ data: shopData, error: shopErr }, { data: updateData }, { data: banData }] = await Promise.all([
+      // Fetch ALL shops with all statuses — order by created_at desc so newest appear first
       db.from('shops').select('*').order('created_at', { ascending: false }),
       db.from('shop_updates').select('*').order('created_at', { ascending: false }),
       db.from('banned_users').select('*').order('created_at', { ascending: false }),
@@ -113,9 +114,13 @@ export default function AdminPanel() {
     return () => { db.removeChannel(ch); };
   }, [adminAuthed, fetchData]);
 
+  // ── Derive filtered lists — always recalculated from fresh shops state ──
   const pending  = shops.filter(s => s.status === 'pending');
   const approved = shops.filter(s => s.status === 'approved');
   const rejected = shops.filter(s => s.status === 'rejected');
+
+  // ── Pending updates (only show pending ones in the Updates tab badge) ──
+  const pendingUpdates = updates.filter(u => u.status === 'pending');
 
   // ── APPROVE shop ──
   const handleApprove = async (shop: any) => {
@@ -123,11 +128,12 @@ export default function AdminPanel() {
     const result = await serverShop({
       action: 'update_shop_status',
       shop_id: shop.id,
-      patch: { status: 'approved', rejection_reason: null, rejection_type: null },
+      patch: { status: 'approved', is_approved: true, rejection_reason: null, rejection_type: null },
     });
     if (result.error) { showToast('Error: ' + result.error, 'err'); return; }
-    // Optimistic UI update
-    setShops(prev => prev.map(s => s.id === shop.id ? { ...s, status: 'approved', rejection_reason: null, rejection_type: null } : s));
+    setShops(prev => prev.map(s => s.id === shop.id
+      ? { ...s, status: 'approved', is_approved: true, rejection_reason: null, rejection_type: null }
+      : s));
     if (shop.email) await sendContributionStatusEmail(shop.email, shop.name, 'approved');
     showToast('✓ Approved: ' + shop.name, 'ok');
     fetchData();
@@ -149,22 +155,20 @@ export default function AdminPanel() {
     setRejectModal(null);
 
     if (isUpdate) {
-      // Reject a shop_update record via server
       const result = await serverShop({ action: 'reject_update', update_id: shop.id });
       if (result.error) { showToast('Error: ' + result.error, 'err'); return; }
-      // Optimistic UI update
       setUpdates(prev => prev.map(u => u.id === shop.id ? { ...u, status: 'rejected' } : u));
       if (shop.email) await sendContributionStatusEmail(shop.email, shop.updated_name || shop.original_name, 'rejected', finalReason, 'standard');
     } else {
-      // Reject a shop via server
       const result = await serverShop({
         action: 'update_shop_status',
         shop_id: shop.id,
-        patch: { status: 'rejected', rejection_reason: finalReason, rejection_type: mode },
+        patch: { status: 'rejected', is_approved: false, rejection_reason: finalReason, rejection_type: mode },
       });
       if (result.error) { showToast('Error: ' + result.error, 'err'); return; }
-      // Optimistic UI update
-      setShops(prev => prev.map(s => s.id === shop.id ? { ...s, status: 'rejected', rejection_reason: finalReason, rejection_type: mode } : s));
+      setShops(prev => prev.map(s => s.id === shop.id
+        ? { ...s, status: 'rejected', is_approved: false, rejection_reason: finalReason, rejection_type: mode }
+        : s));
       if (shop.email) {
         await sendContributionStatusEmail(shop.email, shop.name, 'rejected', finalReason, mode);
         if (mode === 'warning') {
@@ -184,10 +188,12 @@ export default function AdminPanel() {
     const result = await serverShop({
       action: 'update_shop_status',
       shop_id: shop.id,
-      patch: { status: 'approved', rejection_reason: null, rejection_type: null },
+      patch: { status: 'approved', is_approved: true, rejection_reason: null, rejection_type: null },
     });
     if (result.error) { showToast('Error: ' + result.error, 'err'); return; }
-    setShops(prev => prev.map(s => s.id === shop.id ? { ...s, status: 'approved', rejection_reason: null, rejection_type: null } : s));
+    setShops(prev => prev.map(s => s.id === shop.id
+      ? { ...s, status: 'approved', is_approved: true, rejection_reason: null, rejection_type: null }
+      : s));
     if (shop.email) await sendContributionStatusEmail(shop.email, shop.name, 'approved');
     showToast('✓ Re-approved: ' + shop.name, 'ok');
     fetchData();
@@ -216,20 +222,18 @@ export default function AdminPanel() {
       open_time: editShop.open_time,
       close_time: editShop.close_time,
     };
-    // Include lat/lng if they exist in editShop
     if (editShop.lat != null) patch.lat = editShop.lat;
     if (editShop.lng != null) patch.lng = editShop.lng;
 
     const result = await serverShop({ action: 'edit_shop', shop_id: editShop.id, patch });
     if (result.error) { showToast('Error: ' + result.error, 'err'); setEditShop(null); return; }
-    // Optimistic UI update
     setShops(prev => prev.map(s => s.id === editShop.id ? { ...s, ...patch } : s));
     setEditShop(null);
     showToast('✓ Shop updated!', 'ok');
     fetchData();
   };
 
-  // ── BAN user manually (via server API to bypass RLS) ──
+  // ── BAN user manually ──
   const handleManualBan = async (shop: any) => {
     if (!shop.email) { showToast('No email on this shop', 'err'); return; }
     if (!confirm('Permanently ban ' + shop.email + '?')) return;
@@ -263,11 +267,10 @@ export default function AdminPanel() {
     fetchData();
   };
 
-  // ── APPROVE update & apply to shop (via server to bypass RLS) ──
+  // ── APPROVE update & apply to shop ──
   const handleApproveUpdate = async (upd: any) => {
     showToast('Approving update...', 'load');
 
-    // Build the patch to apply to the shops table
     const patch: any = {};
     if (upd.updated_name)                                         patch.name       = upd.updated_name;
     if (upd.updated_brgy)                                         patch.brgy       = upd.updated_brgy;
@@ -289,7 +292,6 @@ export default function AdminPanel() {
 
     if (result.error) { showToast('Error: ' + result.error, 'err'); return; }
 
-    // Optimistic UI updates
     setUpdates(prev => prev.map(u => u.id === upd.id ? { ...u, status: 'approved' } : u));
     if (Object.keys(patch).length > 0) {
       setShops(prev => prev.map(s => s.id === upd.shop_id ? { ...s, ...patch } : s));
@@ -301,9 +303,7 @@ export default function AdminPanel() {
   };
 
   // ── REJECT update ──
-  const handleRejectUpdate = (upd: any) => {
-    openRejectModal(upd, 'standard', true);
-  };
+  const handleRejectUpdate = (upd: any) => openRejectModal(upd, 'standard', true);
 
   // ── DELETE update record ──
   const handleDeleteUpdate = async (upd: any) => {
@@ -337,7 +337,7 @@ export default function AdminPanel() {
     { id: 'pending'  as Tab, label: `Pending (${pending.length})`,                              color: 'bg-amber-500' },
     { id: 'approved' as Tab, label: `Approved (${approved.length})`,                            color: 'bg-[#27ae60]' },
     { id: 'rejected' as Tab, label: `Rejected (${rejected.length})`,                            color: 'bg-red-500' },
-    { id: 'updates'  as Tab, label: `Updates (${updates.length})`,                              color: 'bg-blue-500' },
+    { id: 'updates'  as Tab, label: `Updates (${pendingUpdates.length})`,                       color: 'bg-blue-500' },
     { id: 'banned'   as Tab, label: `Banned (${bannedUsers.filter(b => b.is_banned).length})`,  color: 'bg-gray-700' },
   ];
 
@@ -378,7 +378,14 @@ export default function AdminPanel() {
       {/* Evidence lightbox */}
       {selectedEvidence && (
         <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6" onClick={() => setSelectedEvidence(null)}>
-          <img src={selectedEvidence} alt="Evidence" className="max-w-full max-h-full rounded-2xl" />
+          <div className="relative max-w-full max-h-full">
+            <img src={selectedEvidence} alt="Evidence" className="max-w-full max-h-[85vh] rounded-2xl object-contain" />
+            <button
+              onClick={() => setSelectedEvidence(null)}
+              className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-2 active:bg-black/80">
+              <X size={16} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -583,12 +590,18 @@ export default function AdminPanel() {
                 )}
                 <p className="text-gray-300 text-[10px]">By: {upd.email} • {new Date(upd.created_at).toLocaleDateString()}</p>
 
-                {hasEvidence(upd.evidence_url) && (
-                  <button onClick={() => setSelectedEvidence(upd.evidence_url!)}
-                    className="w-full bg-blue-50 text-blue-500 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 active:opacity-70">
-                    📷 View Evidence Photo
-                  </button>
-                )}
+                {/* Evidence photo — always shown, disabled when no photo */}
+                <button
+                  onClick={() => hasEvidence(upd.evidence_url) && setSelectedEvidence(upd.evidence_url)}
+                  disabled={!hasEvidence(upd.evidence_url)}
+                  title={hasEvidence(upd.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
+                  className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
+                    hasEvidence(upd.evidence_url)
+                      ? 'bg-blue-50 text-blue-500 active:opacity-70'
+                      : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
+                  }`}>
+                  📷 {hasEvidence(upd.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
+                </button>
 
                 {upd.status === 'pending' && (
                   <div className="grid grid-cols-2 gap-3">
@@ -641,10 +654,18 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {hasEvidence(shop.evidence_url) && (
-                  <button onClick={() => setSelectedEvidence(shop.evidence_url!)}
-                    className="text-[#27ae60] text-[11px] font-black block">📷 View Evidence</button>
-                )}
+                {/* Evidence photo — always shown, disabled when no photo */}
+                <button
+                  onClick={() => hasEvidence(shop.evidence_url) && setSelectedEvidence(shop.evidence_url)}
+                  disabled={!hasEvidence(shop.evidence_url)}
+                  title={hasEvidence(shop.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
+                  className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
+                    hasEvidence(shop.evidence_url)
+                      ? 'bg-blue-50 text-blue-500 active:opacity-70'
+                      : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
+                  }`}>
+                  📷 {hasEvidence(shop.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
+                </button>
 
                 {/* ── Buttons per status ── */}
                 <div className="flex gap-2 flex-wrap">
@@ -663,18 +684,6 @@ export default function AdminPanel() {
                       className="flex-1 bg-amber-50 text-amber-500 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1">
                       <AlertTriangle size={13} /> Warn
                     </button>
-                    {/* Evidence photo button – always shown; disabled when no photo uploaded */}
-                    <button
-                      onClick={() => hasEvidence(shop.evidence_url) && setSelectedEvidence(shop.evidence_url)}
-                      disabled={!hasEvidence(shop.evidence_url)}
-                      title={hasEvidence(shop.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
-                      className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
-                        hasEvidence(shop.evidence_url)
-                          ? 'bg-blue-50 text-blue-500 active:opacity-70'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
-                      }`}>
-                      📷 {hasEvidence(shop.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
-                    </button>
                   </>}
 
                   {/* APPROVED actions */}
@@ -686,18 +695,6 @@ export default function AdminPanel() {
                     <button onClick={() => handleManualBan(shop)}
                       className="flex-1 bg-gray-900 text-white py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1">
                       <Ban size={13} /> Ban User
-                    </button>
-                    {/* Evidence photo button – always shown; disabled when no photo uploaded */}
-                    <button
-                      onClick={() => hasEvidence(shop.evidence_url) && setSelectedEvidence(shop.evidence_url)}
-                      disabled={!hasEvidence(shop.evidence_url)}
-                      title={hasEvidence(shop.evidence_url) ? 'View evidence photo' : 'No evidence photo uploaded'}
-                      className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
-                        hasEvidence(shop.evidence_url)
-                          ? 'bg-blue-50 text-blue-500 active:opacity-70'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
-                      }`}>
-                      📷 {hasEvidence(shop.evidence_url) ? 'View Evidence Photo' : 'No Evidence Photo'}
                     </button>
                   </>}
 
