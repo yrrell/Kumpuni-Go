@@ -179,7 +179,7 @@ export default function About() {
               onClick={() => setShowQR(true)}
               className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-all">
               <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="kumpuni-go-logo.png">
+                <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="24" cy="24" r="24" fill="#007DFE"/>
                   <path d="M34 24.5h-9v-2h6.8A8.5 8.5 0 1 0 24 32.5v-4h2v6a10.5 10.5 0 1 1 8-10z" fill="white"/>
                 </svg>
