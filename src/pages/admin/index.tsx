@@ -582,7 +582,9 @@ export default function AdminPanel() {
 
                 {upd.evidence_url && (
                   <button onClick={() => setSelectedEvidence(upd.evidence_url)}
-                    className="text-[#27ae60] text-[11px] font-black block">📷 View Evidence</button>
+                    className="w-full bg-blue-50 text-blue-500 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 active:opacity-70">
+                    📷 View Evidence Photo
+                  </button>
                 )}
 
                 {upd.status === 'pending' && (
@@ -658,6 +660,18 @@ export default function AdminPanel() {
                       className="flex-1 bg-amber-50 text-amber-500 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1">
                       <AlertTriangle size={13} /> Warn
                     </button>
+                    {/* Evidence photo button – always shown; disabled when no photo uploaded */}
+                    <button
+                      onClick={() => shop.evidence_url && setSelectedEvidence(shop.evidence_url)}
+                      disabled={!shop.evidence_url}
+                      title={shop.evidence_url ? 'View evidence photo' : 'No evidence photo uploaded'}
+                      className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
+                        shop.evidence_url
+                          ? 'bg-blue-50 text-blue-500 active:opacity-70'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
+                      }`}>
+                      📷 {shop.evidence_url ? 'View Evidence Photo' : 'No Evidence Photo'}
+                    </button>
                   </>}
 
                   {/* APPROVED actions */}
@@ -669,6 +683,18 @@ export default function AdminPanel() {
                     <button onClick={() => handleManualBan(shop)}
                       className="flex-1 bg-gray-900 text-white py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1">
                       <Ban size={13} /> Ban User
+                    </button>
+                    {/* Evidence photo button – always shown; disabled when no photo uploaded */}
+                    <button
+                      onClick={() => shop.evidence_url && setSelectedEvidence(shop.evidence_url)}
+                      disabled={!shop.evidence_url}
+                      title={shop.evidence_url ? 'View evidence photo' : 'No evidence photo uploaded'}
+                      className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition-opacity ${
+                        shop.evidence_url
+                          ? 'bg-blue-50 text-blue-500 active:opacity-70'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60'
+                      }`}>
+                      📷 {shop.evidence_url ? 'View Evidence Photo' : 'No Evidence Photo'}
                     </button>
                   </>}
 
