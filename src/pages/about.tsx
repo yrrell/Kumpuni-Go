@@ -121,8 +121,8 @@ export default function About() {
               />
             </div>
             <div className="flex-1">
-              <p className="text-[#1a3a3a] font-black text-sm">John Lerry Teodoro</p>
-              <p className="text-gray-400 text-[11px] font-bold">Junior Web Developer</p>
+              <p className="text-[#1a3a3a] font-black text-sm">John Lerry V. Teodoro</p>
+              <p className="text-gray-400 text-[11px] font-bold">Kapampangan Junior Web Developer</p>
               <p className="text-[#27ae60] text-[11px] font-bold mt-0.5">jlerryteodoro@gmail.com</p>
             </div>
           </div>
@@ -200,10 +200,10 @@ export default function About() {
             Kumpuni Go v1.0.0
           </p>
           <p className="text-gray-500 text-[10px] font-bold">
-            Made with ❤ in the Philippines
+            Built in Pampanga. For every Filipino Riders. 🇵🇭
           </p>
           <p className="text-gray-500 text-[9px] font-bold">
-            © 2026 John Lerry Teodoro. All rights reserved.
+            © 2026 John Lerry V. Teodoro. All rights reserved.
           </p>
         </div>
       </div>
