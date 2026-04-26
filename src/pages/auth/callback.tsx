@@ -9,18 +9,20 @@ export default function AuthCallback() {
     const destination = localStorage.getItem('authRedirect') || '/contribute/add';
     localStorage.removeItem('authRedirect');
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        subscription.unsubscribe();
+        clearInterval(interval);
         router.replace(destination);
+      } else if (attempts > 10) {
+        clearInterval(interval);
+        router.replace('/auth/signin');
       }
-    });
+    }, 500);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace(destination);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => clearInterval(interval);
   }, []);
 
   return (
