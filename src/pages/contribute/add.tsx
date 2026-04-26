@@ -49,6 +49,7 @@ export default function AddShop() {
       const user = session?.user ?? null;
       if (!user) { setAuthLoading(false); router.replace('/auth/signin?redirect=/contribute/add'); return; }
       setUser(user);
+      setAuthLoading(false);
       const { data: banData } = await supabase
         .from('banned_users').select('is_banned').eq('email', user.email).single();
       if (banData?.is_banned) setIsBanned(true);
