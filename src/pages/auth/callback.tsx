@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabase';
 
 export default function AuthCallback() {
-  const router = useRouter();
-
   useEffect(() => {
     const destination = localStorage.getItem('authRedirect') || '/contribute/add';
     localStorage.removeItem('authRedirect');
@@ -15,15 +12,11 @@ export default function AuthCallback() {
     const refresh_token = params.get('refresh_token');
 
     if (access_token && refresh_token) {
-      supabase.auth.setSession({ access_token, refresh_token }).then(({ data }) => {
-        if (data.session) {
-          router.replace(destination);
-        } else {
-          router.replace('/auth/signin');
-        }
+      supabase.auth.setSession({ access_token, refresh_token }).then(() => {
+        window.location.href = destination;
       });
     } else {
-      router.replace('/auth/signin');
+      window.location.href = '/auth/signin';
     }
   }, []);
 
