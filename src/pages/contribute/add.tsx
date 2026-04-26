@@ -19,6 +19,7 @@ export default function AddShop() {
   const mapInitialized = useRef(false);
 
   const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -230,6 +231,7 @@ export default function AddShop() {
     setLoading(false);
   };
 
+  if (authLoading) return (<div className="min-h-screen flex items-center justify-center"><p className="animate-pulse font-black uppercase text-sm">Loading...</p></div>);
   if (isBanned) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a3a3a] text-center">
       <p className="text-5xl mb-4">🚫</p>

@@ -7,14 +7,16 @@ import { ChevronLeft, CheckCircle, XCircle, Clock, RefreshCw, Edit3 } from 'luci
 export default function ContributionHistory() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [shops, setShops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [banInfo, setBanInfo] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.replace('/auth/signin?redirect=/contribute/history'); return; }
-      setUser(user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null;
+      if (!user) { router.replace('/auth/signin?redirect=/contribute/history'); setAuthLoading(false); return; }
+      setUser(user); setAuthLoading(false);
 
       const { data: shopData } = await supabase
         .from('shops').select('*')

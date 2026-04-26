@@ -27,6 +27,7 @@ export default function UpdateShop() {
   const markerRef = useRef<any>(null);
 
   const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,10 +58,11 @@ export default function UpdateShop() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.replace('/auth/signin?redirect=/contribute/update'); return; }
-      setUser(user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) { setUser(session.user); } else { router.replace('/auth/signin?redirect=/contribute/update'); }
+      setAuthLoading(false);
     });
+    return () => subscription.unsubscribe();
     supabase.from('shops').select('*').eq('status', 'approved').then(({ data }) => {
       if (data && data.length > 0) setAllShops(data);
     });
