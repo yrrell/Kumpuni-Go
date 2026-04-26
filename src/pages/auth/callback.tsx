@@ -6,13 +6,18 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        subscription.unsubscribe();
         router.replace('/contribute/add');
-      } else {
-        router.replace('/auth/signin');
       }
     });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/contribute/add');
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
