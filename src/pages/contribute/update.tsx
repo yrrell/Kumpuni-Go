@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sendContributionPendingEmail, notifyAdmin } from '../../lib/mailer';
 import { useRouter } from 'next/router';
-import { Search, Camera, ChevronLeft, CheckCircle, Save } from 'lucide-react';
+import { Search, Camera, ChevronLeft, CheckCircle, MapPin, ExternalLink } from 'lucide-react';
 import { useLocation } from '../../context/LocationContext';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -18,7 +18,6 @@ const CHANGE_OPTIONS = [
   { key: 'other',    label: '✏️ Other (describe below)' },
 ];
 
-// Sanitise a string to be safe for use in a storage path
 const safeName = (s: string) =>
   s.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 40);
 
@@ -46,8 +45,10 @@ export default function UpdateShop() {
   const [leafletReady, setLeafletReady] = useState(false);
   const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
   const [newPinLocation, setNewPinLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [pinSaved, setPinSaved] = useState(false);
+  const [pinConfirmed, setPinConfirmed] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  // Step: 'pin' = pinning on map, 'confirm' = showing View Pin confirmation UI
+  const [pinStep, setPinStep] = useState<'pin' | 'confirm'>('pin');
 
   const [form, setForm] = useState({
     name: '',
@@ -109,12 +110,14 @@ export default function UpdateShop() {
     marker.on('dragend', () => {
       const pos = marker.getLatLng();
       setPendingPin({ lat: pos.lat, lng: pos.lng });
-      setPinSaved(false);
+      setPinConfirmed(false);
+      setPinStep('pin');
     });
     map.on('click', (e: any) => {
       marker.setLatLng(e.latlng);
       setPendingPin({ lat: e.latlng.lat, lng: e.latlng.lng });
-      setPinSaved(false);
+      setPinConfirmed(false);
+      setPinStep('pin');
     });
     mapRef.current = map;
     markerRef.current = marker;
@@ -127,7 +130,8 @@ export default function UpdateShop() {
       mapRef.current.remove();
       mapRef.current = null;
       markerRef.current = null;
-      setPinSaved(false);
+      setPinConfirmed(false);
+      setPinStep('pin');
       setNewPinLocation(null);
     }
   }, [selectedChanges]);
@@ -152,11 +156,31 @@ export default function UpdateShop() {
     setGeocoding(false);
   };
 
-  const handleSavePin = () => {
+  // Step 1: User taps "Pin Location" — triggers geocode + shows confirm UI
+  const handlePinLocation = () => {
     if (!pendingPin) return;
     setNewPinLocation(pendingPin);
-    setPinSaved(true);
+    setPinStep('confirm');
     reverseGeocode(pendingPin.lat, pendingPin.lng);
+  };
+
+  // Open pinned location in Google Maps using OSM pin coordinates
+  const handleViewPin = () => {
+    if (!pendingPin) return;
+    const { lat, lng } = pendingPin;
+    window.open(`https://www.google.com/maps?q=${lat},${lng}&ll=${lat},${lng}&z=18`, '_blank');
+  };
+
+  // Step 2: Contributor confirms the location is correct
+  const handleConfirmPin = () => {
+    setPinConfirmed(true);
+    setPinStep('pin');
+  };
+
+  // Step 2 alt: Go back to edit pin
+  const handleEditPin = () => {
+    setPinStep('pin');
+    setPinConfirmed(false);
   };
 
   const handleTargetLocation = () => {
@@ -164,7 +188,8 @@ export default function UpdateShop() {
       pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         setPendingPin({ lat, lng });
-        setPinSaved(false);
+        setPinConfirmed(false);
+        setPinStep('pin');
         mapRef.current?.setView([lat, lng], 18, { animate: true });
         markerRef.current?.setLatLng([lat, lng]);
       },
@@ -182,8 +207,8 @@ export default function UpdateShop() {
     setForm({
       name: shop.name,
       brgy: shop.brgy,
-      municipality: '',
-      province: '',
+      municipality: shop.municipality || '',
+      province: shop.province || '',
       type: shop.type,
       contact: shop.contact || '',
       openTime: shop.open_time ?? 8,
@@ -193,6 +218,8 @@ export default function UpdateShop() {
     setSelectedChanges([]);
     setEvidenceFile(null);
     setEvidencePreview(null);
+    setPinConfirmed(false);
+    setPinStep('pin');
   };
 
   const toggleChange = (key: string) => {
@@ -219,28 +246,26 @@ export default function UpdateShop() {
     e.preventDefault();
     if (!selectedShop || !user) return;
     if (selectedChanges.length === 0) { alert('Please select what changed.'); return; }
-    if (selectedChanges.includes('location') && !pinSaved) {
-      alert('Please save the new pin location first.'); return;
+    if (selectedChanges.includes('location') && !pinConfirmed) {
+      alert('Please confirm the new pin location. Tap "Pin Location" → View in Google Maps → Confirm Location.'); return;
     }
     setLoading(true);
 
-    // ── Upload evidence photo with descriptive filename ──
+    // Upload evidence photo to public/assets/evidence_photo/
     let evidence_url = '';
     if (evidenceFile) {
       try {
         setUploadProgress('Uploading evidence photo...');
         const ext = evidenceFile.name.split('.').pop() || 'jpg';
-        // Filename: evidence/update_SHOPNAME_USERID_TIMESTAMP.ext
         const shopSlug = safeName(selectedShop.name);
-        const fileName = `evidence/update_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
+        const fileName = `evidence_photo/update_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
         const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('contributions')
-          .upload(fileName, evidenceFile, { contentType: evidenceFile.type });
+          .from('public')
+          .upload(`assets/${fileName}`, evidenceFile, { contentType: evidenceFile.type });
         if (uploadErr) {
           console.error('Evidence upload error:', uploadErr.message);
         } else if (uploadData) {
-          const { data: publicUrl } = supabase.storage.from('contributions').getPublicUrl(fileName);
-          evidence_url = publicUrl.publicUrl;
+          evidence_url = `/assets/${fileName}`;
         }
         setUploadProgress(null);
       } catch (err) {
@@ -255,7 +280,7 @@ export default function UpdateShop() {
       otherNote ? `Note: ${otherNote}` : '',
     ].filter(Boolean).join(' — ');
 
-    const newBrgy = selectedChanges.includes('location') && pinSaved
+    const newBrgy = selectedChanges.includes('location') && pinConfirmed
       ? [form.municipality, form.province].filter(Boolean).join(', ')
       : form.brgy;
 
@@ -264,6 +289,8 @@ export default function UpdateShop() {
       original_name: selectedShop.name,
       updated_name: form.name.toUpperCase(),
       updated_brgy: newBrgy,
+      updated_municipality: form.municipality || null,
+      updated_province: form.province || null,
       updated_type: form.type,
       updated_contact: form.contact || null,
       updated_open_time: form.openTime,
@@ -278,8 +305,8 @@ export default function UpdateShop() {
       created_at: new Date().toISOString(),
     };
 
-    // Only add lat/lng if shop moved
-    if (selectedChanges.includes('location') && newPinLocation) {
+    // Only add lat/lng if shop moved and confirmed
+    if (selectedChanges.includes('location') && newPinLocation && pinConfirmed) {
       insertData.updated_lat = newPinLocation.lat;
       insertData.updated_lng = newPinLocation.lng;
     }
@@ -296,6 +323,7 @@ export default function UpdateShop() {
     setLoading(false);
   };
 
+  // ── Success screen ──
   if (submitted) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-center">
       <CheckCircle size={64} className="text-[#27ae60] mb-4" />
@@ -313,6 +341,7 @@ export default function UpdateShop() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
+      {/* Header */}
       <div className="bg-white px-5 py-4 flex items-center gap-3 border-b border-gray-50 sticky top-0 z-50">
         <button onClick={() => router.back()} className="text-gray-400"><ChevronLeft size={22} /></button>
         <h1 className="text-[#1a3a3a] font-black text-base uppercase italic">Update Shop</h1>
@@ -344,6 +373,7 @@ export default function UpdateShop() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
 
+            {/* Selected shop banner */}
             <div className="bg-green-50 rounded-2xl p-4">
               <p className="text-[10px] font-black text-[#27ae60] uppercase">Updating:</p>
               <p className="text-[#1a3a3a] font-black uppercase">{selectedShop.name}</p>
@@ -351,6 +381,7 @@ export default function UpdateShop() {
                 className="text-[10px] text-gray-400 underline mt-1">Change shop</button>
             </div>
 
+            {/* What changed? */}
             <div>
               <label className="text-[10px] font-black text-gray-400 uppercase pl-1 block mb-2">
                 What Changed? (select all that apply)
@@ -380,9 +411,11 @@ export default function UpdateShop() {
                 <label className="text-[10px] font-black text-gray-400 uppercase pl-1 block">📍 New Shop Location</label>
                 <div className="bg-[#1a3a3a] rounded-2xl p-3">
                   <p className="text-gray-400 text-[11px] font-bold leading-relaxed">
-                    Drag the amber pin or tap the map to mark the new location. Then tap <span className="text-[#f59e0b]">Save Location</span>.
+                    Drag the amber pin or tap the map to mark the new location.
+                    Then tap <span className="text-[#f59e0b]">Pin Location</span> to confirm.
                   </p>
                 </div>
+                {/* OSM Map */}
                 <div className="relative rounded-[1.5rem] overflow-hidden border-2 border-amber-200 shadow-md" style={{ height: '260px' }}>
                   <div ref={mapDivRef} style={{ width: '100%', height: '100%', background: '#e8f4e8' }} />
                   {!leafletReady && (
@@ -390,6 +423,7 @@ export default function UpdateShop() {
                       <div className="w-6 h-6 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
+                  {/* GPS target button */}
                   <button type="button" onClick={handleTargetLocation}
                     className="absolute top-3 right-3 z-[1000] bg-white rounded-full p-2.5 shadow-lg border border-gray-200 active:scale-95">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round">
@@ -401,20 +435,56 @@ export default function UpdateShop() {
                       <line x1="19" y1="12" x2="22" y2="12" />
                     </svg>
                   </button>
+                  {/* Pin Location button */}
                   <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center">
-                    <button type="button" onClick={handleSavePin}
+                    <button type="button" onClick={handlePinLocation}
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-[11px] uppercase shadow-lg transition-all active:scale-95 ${
-                        pinSaved ? 'bg-amber-500 text-white' : 'bg-white text-amber-500 border-2 border-amber-400'
+                        pinConfirmed
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white text-amber-500 border-2 border-amber-400'
                       }`}>
-                      <Save size={14} />
-                      {pinSaved ? '✓ Location Saved' : 'Save Location'}
+                      <MapPin size={14} />
+                      {pinConfirmed ? '✓ Location Confirmed' : 'Pin Location'}
                     </button>
                   </div>
                 </div>
+
+                {/* View Pin confirmation panel */}
+                {pinStep === 'confirm' && pendingPin && (
+                  <div className="bg-[#1a3a3a] rounded-2xl p-4 space-y-3 border-2 border-amber-400/40">
+                    <p className="text-white font-black text-xs uppercase tracking-wide">
+                      📍 Verify New Pin Location
+                    </p>
+                    <p className="text-gray-400 text-[11px] font-bold leading-relaxed">
+                      New pin is at <span className="text-[#f59e0b]">{pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}</span>.
+                      Tap <span className="text-[#f59e0b]">View Pin</span> to open Google Maps and verify this is the correct new location.
+                    </p>
+                    {/* View Pin button — opens Google Maps at OSM pin coordinates */}
+                    <button type="button" onClick={handleViewPin}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white py-3 rounded-xl font-black text-xs uppercase active:opacity-80">
+                      <ExternalLink size={14} />
+                      View Pin in Google Maps
+                    </button>
+                    <p className="text-gray-500 text-[10px] font-bold text-center">
+                      Are you sure this is the correct new location?
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={handleConfirmPin}
+                        className="bg-amber-500 text-white py-3 rounded-xl font-black text-xs uppercase active:opacity-80">
+                        ✓ Yes, Confirm
+                      </button>
+                      <button type="button" onClick={handleEditPin}
+                        className="bg-white text-gray-600 border border-gray-200 py-3 rounded-xl font-black text-xs uppercase active:bg-gray-50">
+                        ← No, Edit Pin
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {geocoding && <p className="text-[10px] text-amber-500 font-bold pl-1 animate-pulse">📡 Getting address...</p>}
-                {pinSaved && !geocoding && (
+                {pinConfirmed && !geocoding && (
                   <>
-                    <p className="text-[10px] text-amber-500 font-bold pl-1">📍 New location saved — address auto-filled ✓</p>
+                    <p className="text-[10px] text-amber-500 font-bold pl-1">✅ New location confirmed — address auto-filled ✓</p>
                     <input placeholder="MUNICIPALITY / CITY" value={form.municipality}
                       onChange={e => setForm({ ...form, municipality: e.target.value.toUpperCase() })}
                       className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
@@ -426,6 +496,7 @@ export default function UpdateShop() {
               </div>
             )}
 
+            {/* ── Conditional change fields ── */}
             {selectedChanges.includes('name') && (
               <input placeholder="NEW SHOP NAME *" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })}

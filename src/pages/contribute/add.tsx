@@ -4,11 +4,10 @@ import { supabase } from '../../lib/supabase';
 import { sendContributionPendingEmail, notifyAdmin } from '../../lib/mailer';
 import { useLocation } from '../../context/LocationContext';
 import { useRouter } from 'next/router';
-import { ChevronLeft, CheckCircle, Camera, Save } from 'lucide-react';
+import { ChevronLeft, CheckCircle, Camera, MapPin, ExternalLink } from 'lucide-react';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// Sanitise a string to be safe for use in a storage path
 const safeName = (s: string) =>
   s.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 40);
 
@@ -19,7 +18,6 @@ export default function AddShop() {
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  const mapInitialized = useRef(false);
 
   const [user, setUser] = useState<any>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -32,8 +30,10 @@ export default function AddShop() {
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [pinLocation, setPinLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [leafletReady, setLeafletReady] = useState(false);
-  const [pinSaved, setPinSaved] = useState(false);
+  const [pinConfirmed, setPinConfirmed] = useState(false);
   const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
+  // Step: 'pin' = pinning on map, 'confirm' = showing View Pin confirmation UI
+  const [pinStep, setPinStep] = useState<'pin' | 'confirm'>('pin');
 
   const [form, setForm] = useState({
     name: '',
@@ -70,14 +70,13 @@ export default function AddShop() {
     document.head.appendChild(script);
   }, []);
 
-  // Init Leaflet map — runs ONCE when leaflet is ready.
+  // Init Leaflet map
   useEffect(() => {
     if (!leafletReady || !mapDivRef.current || mapRef.current) return;
 
     const lat = location?.lat ?? 14.9333;
     const lng = location?.lng ?? 120.5333;
     setPendingPin({ lat, lng });
-    mapInitialized.current = true;
 
     const L = (window as any).L;
     const map = L.map(mapDivRef.current, {
@@ -105,13 +104,15 @@ export default function AddShop() {
     marker.on('dragend', () => {
       const pos = marker.getLatLng();
       setPendingPin({ lat: pos.lat, lng: pos.lng });
-      setPinSaved(false);
+      setPinConfirmed(false);
+      setPinStep('pin');
     });
 
     map.on('click', (e: any) => {
       marker.setLatLng(e.latlng);
       setPendingPin({ lat: e.latlng.lat, lng: e.latlng.lng });
-      setPinSaved(false);
+      setPinConfirmed(false);
+      setPinStep('pin');
     });
 
     mapRef.current = map;
@@ -140,11 +141,31 @@ export default function AddShop() {
     setGeocoding(false);
   };
 
-  const handleSavePin = () => {
+  // Step 1: User taps "Pin Location" button — triggers geocode + shows confirm UI
+  const handlePinLocation = () => {
     if (!pendingPin) return;
     setPinLocation(pendingPin);
-    setPinSaved(true);
+    setPinStep('confirm');
     reverseGeocode(pendingPin.lat, pendingPin.lng);
+  };
+
+  // Open pinned location in Google Maps (linked from the OSM pin coordinates)
+  const handleViewPin = () => {
+    if (!pendingPin) return;
+    const { lat, lng } = pendingPin;
+    window.open(`https://www.google.com/maps?q=${lat},${lng}&ll=${lat},${lng}&z=18`, '_blank');
+  };
+
+  // Step 2: Contributor confirms the location is correct
+  const handleConfirmPin = () => {
+    setPinConfirmed(true);
+    setPinStep('pin'); // collapse back to map view
+  };
+
+  // Step 2 alt: Go back to edit pin
+  const handleEditPin = () => {
+    setPinStep('pin');
+    setPinConfirmed(false);
   };
 
   const handleTargetLocation = () => {
@@ -152,7 +173,8 @@ export default function AddShop() {
       pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         setPendingPin({ lat, lng });
-        setPinSaved(false);
+        setPinConfirmed(false);
+        setPinStep('pin');
         mapRef.current?.setView([lat, lng], 18, { animate: true });
         markerRef.current?.setLatLng([lat, lng]);
       },
@@ -181,30 +203,28 @@ export default function AddShop() {
     e.preventDefault();
     if (!user || isBanned) return;
     if (!form.name.trim()) { alert('Shop name is required'); return; }
-    if (!pinSaved) { alert('Please save your pin location first.'); return; }
+    if (!pinConfirmed) { alert('Please confirm your pin location first. Tap "Pin Location" → View in Google Maps → Confirm Location.'); return; }
     setLoading(true);
 
     const finalLat = pinLocation?.lat ?? location?.lat ?? 14.9333;
     const finalLng = pinLocation?.lng ?? location?.lng ?? 120.5333;
     const brgy = [form.municipality, form.province].filter(Boolean).join(', ');
 
-    // ── Upload evidence photo with descriptive filename ──
+    // Upload evidence photo to public/assets/evidence_photo/
     let evidence_url = '';
     if (evidenceFile) {
       try {
         setUploadProgress('Uploading evidence photo...');
-        // Filename: evidence/SHOPNAME_USERID_TIMESTAMP.ext
         const ext = evidenceFile.name.split('.').pop() || 'jpg';
         const shopSlug = safeName(form.name);
-        const fileName = `evidence/new_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
+        const fileName = `evidence_photo/new_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
         const { data: up, error: upErr } = await supabase.storage
-          .from('contributions')
-          .upload(fileName, evidenceFile, { upsert: true, contentType: evidenceFile.type });
+          .from('public')
+          .upload(`assets/${fileName}`, evidenceFile, { upsert: true, contentType: evidenceFile.type });
         if (upErr) {
           console.error('Evidence upload error:', upErr.message);
         } else if (up) {
-          const { data: pub } = supabase.storage.from('contributions').getPublicUrl(fileName);
-          evidence_url = pub.publicUrl;
+          evidence_url = `/assets/${fileName}`;
         }
         setUploadProgress(null);
       } catch (err) {
@@ -216,6 +236,8 @@ export default function AddShop() {
     const { error } = await supabase.from('shops').insert([{
       name: form.name.toUpperCase(),
       brgy,
+      municipality: form.municipality,
+      province: form.province,
       type: form.type,
       contact: form.contact || null,
       lat: finalLat,
@@ -242,6 +264,7 @@ export default function AddShop() {
     setLoading(false);
   };
 
+  // ── Banned screen ──
   if (isBanned) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a3a3a] text-center">
       <p className="text-5xl mb-4">🚫</p>
@@ -256,6 +279,7 @@ export default function AddShop() {
     </div>
   );
 
+  // ── Success screen ──
   if (submitted) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#f8fafc] text-center">
       <CheckCircle size={64} className="text-[#27ae60] mb-6" />
@@ -275,6 +299,7 @@ export default function AddShop() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
+      {/* Header */}
       <div className="bg-white px-5 py-4 flex items-center gap-3 border-b border-gray-50 sticky top-0 z-50">
         <button onClick={() => router.back()} className="text-gray-400 p-1">
           <ChevronLeft size={22} />
@@ -284,6 +309,7 @@ export default function AddShop() {
 
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
 
+        {/* ── Map instruction banner ── */}
         <div className="bg-[#1a3a3a] rounded-2xl p-4">
           <p className="text-white font-black text-xs uppercase tracking-wide mb-1">
             📍 Pin Your Shop Location
@@ -292,10 +318,11 @@ export default function AddShop() {
             Drag the green pin or tap the map to set the exact location of the shop.
             An accurate pin is required for the shop to appear correctly on the live map
             after approval. Use the <span className="text-[#27ae60]">⊕ target button</span> to snap to your current GPS position.
-            Then tap <span className="text-[#27ae60]">Save Location</span> to confirm.
+            Then tap <span className="text-[#27ae60]">Pin Location</span> to confirm.
           </p>
         </div>
 
+        {/* ── OSM Map ── */}
         <div className="relative rounded-[1.5rem] overflow-hidden border-2 border-[#27ae60]/20 shadow-md"
           style={{ height: '300px' }}>
           <div ref={mapDivRef} style={{ width: '100%', height: '100%', background: '#e8f4e8' }} />
@@ -304,6 +331,7 @@ export default function AddShop() {
               <div className="w-6 h-6 border-4 border-[#27ae60] border-t-transparent rounded-full animate-spin" />
             </div>
           )}
+          {/* GPS target button */}
           <button type="button" onClick={handleTargetLocation}
             className="absolute top-3 right-3 z-[1000] bg-white rounded-full p-2.5 shadow-lg border border-gray-200 active:scale-95 transition-all">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -316,32 +344,70 @@ export default function AddShop() {
               <line x1="19" y1="12" x2="22" y2="12" />
             </svg>
           </button>
+          {/* Pin Location button — replaces Save Location */}
           <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center px-3">
-            <button type="button" onClick={handleSavePin}
+            <button type="button" onClick={handlePinLocation}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-[11px] uppercase shadow-lg transition-all active:scale-95 ${
-                pinSaved ? 'bg-[#27ae60] text-white' : 'bg-white text-[#27ae60] border-2 border-[#27ae60]'
+                pinConfirmed
+                  ? 'bg-[#27ae60] text-white'
+                  : 'bg-white text-[#27ae60] border-2 border-[#27ae60]'
               }`}>
-              <Save size={14} />
-              {pinSaved ? '✓ Location Saved' : 'Save Location'}
+              <MapPin size={14} />
+              {pinConfirmed ? '✓ Location Confirmed' : 'Pin Location'}
             </button>
           </div>
         </div>
+
+        {/* ── View Pin confirmation panel (shown after tapping Pin Location) ── */}
+        {pinStep === 'confirm' && pendingPin && (
+          <div className="bg-[#1a3a3a] rounded-2xl p-4 space-y-3 border-2 border-[#27ae60]/40">
+            <p className="text-white font-black text-xs uppercase tracking-wide">
+              📍 Verify Your Pin Location
+            </p>
+            <p className="text-gray-400 text-[11px] font-bold leading-relaxed">
+              Your pin is at <span className="text-[#27ae60]">{pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}</span>.
+              Tap <span className="text-[#27ae60]">View Pin</span> to open Google Maps and verify the exact location matches what you pinned on the map above.
+              Once you confirm it is correct, tap <span className="text-[#27ae60]">Confirm Location</span>.
+            </p>
+            {/* View Pin button — opens Google Maps at OSM pin coordinates */}
+            <button type="button" onClick={handleViewPin}
+              className="w-full flex items-center justify-center gap-2 bg-[#27ae60] text-white py-3 rounded-xl font-black text-xs uppercase active:opacity-80">
+              <ExternalLink size={14} />
+              View Pin in Google Maps
+            </button>
+            <p className="text-gray-500 text-[10px] font-bold text-center">
+              Are you sure this is the correct location?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={handleConfirmPin}
+                className="bg-[#27ae60] text-white py-3 rounded-xl font-black text-xs uppercase active:opacity-80">
+                ✓ Yes, Confirm
+              </button>
+              <button type="button" onClick={handleEditPin}
+                className="bg-white text-gray-600 border border-gray-200 py-3 rounded-xl font-black text-xs uppercase active:bg-gray-50">
+                ← No, Edit Pin
+              </button>
+            </div>
+          </div>
+        )}
 
         {geocoding && (
           <p className="text-[10px] text-[#27ae60] font-bold pl-1 animate-pulse">
             📡 Getting address from pin location...
           </p>
         )}
-        {pinSaved && !geocoding && (
+        {pinConfirmed && !geocoding && (
           <p className="text-[10px] text-[#27ae60] font-bold pl-1">
-            📍 Pin location saved — address auto-filled below ✓
+            ✅ Pin confirmed — address auto-filled below ✓
           </p>
         )}
 
+        {/* ── Shop Name ── */}
         <input required placeholder="SHOP NAME *" value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })}
           className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
 
+        {/* ── Address (auto-filled from pin) ── */}
         <div className="space-y-2">
           <div className="flex items-center justify-between px-1">
             <label className="text-[10px] font-black text-gray-400 uppercase">Address Details</label>
@@ -360,6 +426,7 @@ export default function AddShop() {
             className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
         </div>
 
+        {/* ── Shop Type ── */}
         <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
           className="w-full p-4 bg-white rounded-2xl font-black uppercase text-xs border border-gray-100 focus:outline-none focus:border-[#27ae60]">
           <option value="Vulcanizing">🔧 Vulcanizing Shop</option>
@@ -367,11 +434,13 @@ export default function AddShop() {
           <option value="Motorshop & Vulcanizing">⚙️ Motorshop &amp; Vulcanizing</option>
         </select>
 
+        {/* ── Contact ── */}
         <input placeholder="CONTACT NUMBER (Optional, 09XXXXXXXXX)" value={form.contact}
           onChange={e => { if (e.target.value.length <= 11) setForm({ ...form, contact: e.target.value }); }}
           type="tel" maxLength={11}
           className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
 
+        {/* ── Hours ── */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Opens at</label>
@@ -393,6 +462,7 @@ export default function AddShop() {
           </div>
         </div>
 
+        {/* ── Work Days ── */}
         <div>
           <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Work Days</label>
           <div className="flex gap-2 mt-2 flex-wrap">
@@ -440,6 +510,7 @@ export default function AddShop() {
           )}
         </div>
 
+        {/* ── Guidelines ── */}
         <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
           <p className="text-amber-700 font-black text-[11px] uppercase tracking-wide mb-1">⚠️ Submission Guidelines</p>
           <p className="text-amber-600 text-[10px] font-bold leading-relaxed">
@@ -448,13 +519,13 @@ export default function AddShop() {
           </p>
         </div>
 
-        <button type="submit" disabled={loading || !pinSaved}
+        <button type="submit" disabled={loading || !pinConfirmed}
           className={`w-full py-4 rounded-2xl font-black uppercase text-sm shadow-lg transition-all ${
-            loading || !pinSaved
+            loading || !pinConfirmed
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
               : 'bg-[#27ae60] text-white shadow-green-200 active:scale-95'
           }`}>
-          {loading ? 'Submitting...' : !pinSaved ? 'Save Pin Location First' : 'Submit Shop'}
+          {loading ? 'Submitting...' : !pinConfirmed ? 'Confirm Pin Location First' : 'Submit Shop'}
         </button>
 
       </form>

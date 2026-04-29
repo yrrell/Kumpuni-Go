@@ -4,9 +4,20 @@ import { createClient } from '@supabase/supabase-js';
 import { sendContributionStatusEmail, sendBanEmail } from '../../lib/mailer';
 import { CheckCircle, XCircle, Trash2, Edit3, RefreshCw, AlertTriangle, Ban, X } from 'lucide-react';
 
-// Treats both null and empty string (stored by older add.tsx) as "no evidence"
+// Returns true only when a real, non-empty evidence URL is present
 const hasEvidence = (url: any): url is string =>
-  typeof url === 'string' && url.trim().length > 0 && url.trim() !== 'EMPTY';
+  typeof url === 'string' &&
+  url.trim().length > 0 &&
+  url.trim() !== 'EMPTY' &&
+  url.trim() !== 'null';
+
+// Resolves the stored evidence_url to a displayable src.
+// Handles full Supabase storage URLs (https://...) or relative /assets/... paths.
+const resolveEvidenceUrl = (url: string): string => {
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return url;
+  return '/' + url;
+};
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -379,7 +390,7 @@ export default function AdminPanel() {
       {selectedEvidence && (
         <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6" onClick={() => setSelectedEvidence(null)}>
           <div className="relative max-w-full max-h-full">
-            <img src={selectedEvidence} alt="Evidence" className="max-w-full max-h-[85vh] rounded-2xl object-contain" />
+            <img src={resolveEvidenceUrl(selectedEvidence)} alt="Evidence" className="max-w-full max-h-[85vh] rounded-2xl object-contain" />
             <button
               onClick={() => setSelectedEvidence(null)}
               className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-2 active:bg-black/80">
