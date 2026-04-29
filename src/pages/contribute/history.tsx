@@ -1,6 +1,6 @@
 // src/pages/contribute/history.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -444,14 +444,14 @@ function ContribCard({
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 export default function MyContributions() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  
   const { user } = useAuth();
 
   const [contributions, setContributions] = useState<AnyContrib[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState<string>(
-    (location.state as any)?.success ?? ""
+    (router.query.success as string) ?? ""
   );
 
   // Modal states
@@ -510,7 +510,7 @@ export default function MyContributions() {
     <div className="min-h-screen bg-gray-50 pb-10">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-3">
-        <button onClick={() => navigate(-1)} className="text-gray-600 text-xl font-bold">
+        <button onClick={() => router.back()} className="text-gray-600 text-xl font-bold">
           ‹
         </button>
         <h1 className="text-xl font-extrabold tracking-wide text-gray-900">
