@@ -48,6 +48,8 @@ export default function About() {
               Open your GCash app and scan this QR code to send a donation. Thank you! 💚
             </p>
             <p className="text-[#1a3a3a] font-black text-xs mt-2">JO*N LE**Y T.</p>
+            <p className="text-[#1a3a3a] font-black text-xs mt-2">or</p>
+            <p className="text-[#1a3a3a] font-black text-xs mt-2">0907-873-4621</p>
           </div>
         </div>
       )}
