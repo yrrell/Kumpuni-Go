@@ -145,3 +145,4 @@ vite.config.ts.timestamp-*
 *.zip
 .env.local
 .next/
+node_modules/
