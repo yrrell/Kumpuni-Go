@@ -9,14 +9,29 @@ interface HeaderProps {
 export function Header({ locationDisplay }: HeaderProps) {
   const [dark, setDark] = useState(false);
 
+  // Load saved theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      setDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  // Apply theme on toggle
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
   }, [dark]);
 
   return (
-    <header className="bg-white dark:bg-[#0f1f1f] px-5 py-3 flex items-center justify-between border-b border-gray-50 dark:border-white/10 sticky top-0 z-50 shadow-sm transition-colors">
+    <header className="bg-white dark:bg-[#0f1f1f] px-5 py-3 flex items-center justify-between border-b border-gray-50 dark:border-white/10 sticky top-0 z-50 shadow-sm transition-colors duration-300">
       <div className="flex items-center gap-3">
-        <img src="/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-10 h-10 rounded-xl object-cover shadow-md" />
+        <img
+          src="/assets/kumpuni-go-logo.png"
+          alt="Kumpuni Go"
+          className="w-10 h-10 rounded-xl object-cover shadow-md"
+        />
         <div>
           <h1 className="font-black text-base leading-tight">
             <span className="text-[#1a3a3a] dark:text-white italic">Kumpuni</span>
