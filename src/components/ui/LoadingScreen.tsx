@@ -3,7 +3,7 @@ import React from 'react';
 
 export const LoadingScreen = () => (
   <div className="fixed inset-0 bg-[#1a3a3a] flex flex-col items-center justify-center z-50 p-10 text-center">
-    <img src="/kumpuni-go-logo.png" className="w-28 h-28 mb-6 animate-bounce rounded-full object-cover" alt="Kumpuni Go" />
+    <img src="/assets/kumpuni-go-logo.png" className="w-28 h-28 mb-6 animate-bounce rounded-full object-cover" alt="Kumpuni Go" />
     <h1 className="text-3xl font-black text-white mb-2 uppercase italic tracking-tighter">Kumpuni Go!</h1>
    
     <h3 className="text-green-300 font-bold text-sm mb-10">FIND THE NEAREST VULCANIZING SHOPS AND MOTOR REPAIR SHOPS</h3>

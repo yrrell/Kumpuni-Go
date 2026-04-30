@@ -65,7 +65,7 @@ export default function About() {
       {/* ── Hero ── */}
       <div className="bg-[#1a3a3a] px-5 pb-10 pt-2 flex flex-col items-center text-center">
         <div className="w-24 h-24 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center mb-4 overflow-hidden">
-          <img src="/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-full h-full object-cover" />
+          <img src="/assets/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-full h-full object-cover" />
         </div>
         <h1 className="text-white font-black text-3xl italic tracking-tight">Kumpuni Go!</h1>
         <div className="mt-3 bg-[#27ae60]/20 border border-[#27ae60]/40 px-4 py-1.5 rounded-full">

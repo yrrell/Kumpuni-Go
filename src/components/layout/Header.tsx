@@ -9,7 +9,7 @@ export function Header({ locationDisplay }: HeaderProps) {
   return (
     <header className="bg-white px-5 py-3 flex items-center justify-between border-b border-gray-50 sticky top-0 z-50 shadow-sm">
       <div className="flex items-center gap-3">
-        <img src="/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-10 h-10 rounded-full object-cover" />
+        <img src="/assets/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-10 h-10 rounded-full object-cover" />
         <div>
           <h1 className="text-[#1a3a3a] font-black text-base italic leading-tight">Kumpuni Go!</h1>
           <p className="text-[#27ae60] text-[10px] font-black uppercase tracking-wide">
