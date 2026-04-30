@@ -2,25 +2,207 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   All colors are driven by CSS variables so every page automatically
+   inherits dark mode when the `dark` class is toggled on <html>.
+───────────────────────────────────────────────────────────────── */
 :root {
-  --mayap-green: #27ae60;
-  --mayap-dark: #1a3a3a;
+  /* Brand */
+  --green:           #27ae60;
+  --teal:            #1a3a3a;
+
+  /* Semantic – light mode */
+  --bg-page:         #f8fafc;
+  --bg-card:         #ffffff;
+  --bg-card-2:       #f1f5f9;
+  --bg-input:        #f8fafc;
+  --bg-nav:          #ffffff;
+  --bg-header:       #ffffff;
+  --text-base:       #1a3a3a;
+  --text-muted:      #6b7280;
+  --text-subtle:     #9ca3af;
+  --border:          #e5e7eb;
+  --border-subtle:   #f3f4f6;
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.06);
 }
 
-body {
-  @apply bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-900 dark:text-white antialiased transition-colors duration-300;
-  font-family: sans-serif;
+.dark {
+  /* Semantic – dark mode */
+  --bg-page:         #0a0a0a;
+  --bg-card:         #1a1a1a;
+  --bg-card-2:       #111111;
+  --bg-input:        #1f1f1f;
+  --bg-nav:          #0f1f1f;
+  --bg-header:       #0f1f1f;
+  --text-base:       #f1f5f9;
+  --text-muted:      #94a3b8;
+  --text-subtle:     #64748b;
+  --border:          rgba(255, 255, 255, 0.10);
+  --border-subtle:   rgba(255, 255, 255, 0.05);
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.40);
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   BASE RESETS
+───────────────────────────────────────────────────────────────── */
 html {
   @apply transition-colors duration-300;
 }
 
-/* Custom card shadow for that premium feel */
-.aura-card {
-  @apply bg-white dark:bg-[#1a1a1a] rounded-[2rem] border border-gray-100 dark:border-white/10 shadow-sm transition-all active:scale-[0.98];
+body {
+  background-color: var(--bg-page);
+  color: var(--text-base);
+  @apply antialiased transition-colors duration-300;
+  font-family: sans-serif;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   DARK: FORM ELEMENTS
+   Catches every <input>, <textarea>, <select> that doesn't have
+   an explicit dark: variant in the JSX.
+───────────────────────────────────────────────────────────────── */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.dark textarea,
+.dark select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-base) !important;
+  border-color: var(--border) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DARK: PAGE BACKGROUNDS
+   Covers pages that use hardcoded `bg-[#f8fafc]` or `bg-white`
+   on their outermost wrapper without a dark: counterpart.
+───────────────────────────────────────────────────────────────── */
+.dark .min-h-screen {
+  background-color: var(--bg-page);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DARK: COMMON TAILWIND PATTERNS
+   Catches hardcoded classes used across pages and components.
+───────────────────────────────────────────────────────────────── */
+
+/* White backgrounds (cards, modals, sheets, nav bars) */
+.dark [class~="bg-white"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* Light grey backgrounds (input areas, section tints) */
+.dark [class~="bg-gray-50"] {
+  background-color: var(--bg-card-2) !important;
+}
+.dark [class~="bg-gray-100"] {
+  background-color: #1f1f1f !important;
+}
+
+/* Borders */
+.dark [class~="border-gray-100"],
+.dark [class~="border-gray-200"] {
+  border-color: var(--border) !important;
+}
+
+/* Text colours */
+.dark [class~="text-gray-400"] {
+  color: var(--text-muted) !important;
+}
+.dark [class~="text-gray-300"] {
+  color: var(--text-subtle) !important;
+}
+.dark [class~="text-gray-500"] {
+  color: var(--text-muted) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DARK: SCROLLBAR
+───────────────────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #111;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   REUSABLE COMPONENT CLASSES
+   Use these in JSX instead of hardcoded Tailwind colors to get
+   automatic dark mode for free.
+───────────────────────────────────────────────────────────────── */
+
+/* Page wrapper */
+.page-bg {
+  background-color: var(--bg-page);
+  color: var(--text-base);
+  @apply min-h-screen transition-colors duration-300;
+}
+
+/* Elevated card */
+.aura-card {
+  background-color: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  @apply rounded-[2rem] border transition-all duration-300 active:scale-[0.98];
+}
+
+/* Subtle inner card / section tile */
+.aura-card-2 {
+  background-color: var(--bg-card-2);
+  border-color: var(--border);
+  @apply rounded-2xl border transition-colors duration-300;
+}
+
+/* Input / search bar */
+.input-base {
+  background-color: var(--bg-input);
+  color: var(--text-base);
+  border-color: var(--border);
+  @apply rounded-2xl border px-4 py-3 text-sm w-full transition-colors duration-300 outline-none;
+}
+.input-base::placeholder { color: var(--text-muted); }
+.input-base:focus { border-color: var(--green); }
+
+/* Bottom navigation bar */
+.bottom-nav-bar {
+  background-color: var(--bg-nav);
+  border-top-color: var(--border);
+  @apply border-t transition-colors duration-300;
+}
+
+/* Modal / bottom sheet */
+.modal-card {
+  background-color: var(--bg-card);
+  border-color: var(--border);
+  @apply rounded-[2rem] border shadow-2xl transition-colors duration-300;
+}
+
+/* Section header / sticky bar */
+.section-header {
+  background-color: var(--bg-header);
+  border-bottom-color: var(--border);
+  @apply border-b sticky top-0 z-50 transition-colors duration-300;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NAV & TEXT HELPERS
+───────────────────────────────────────────────────────────────── */
 .nav-active {
   @apply text-[#27ae60] font-bold;
 }
+
+.text-theme     { color: var(--text-base); }
+.text-muted     { color: var(--text-muted); }
+.text-subtle    { color: var(--text-subtle); }
+.border-theme   { border-color: var(--border); }
+.bg-theme-card  { background-color: var(--bg-card); }
+.bg-theme-page  { background-color: var(--bg-page); }
