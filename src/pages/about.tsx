@@ -67,7 +67,10 @@ export default function About() {
         <div className="w-24 h-24 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center mb-4 overflow-hidden">
           <img src="/assets/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-full h-full object-cover" />
         </div>
-        <h1 className="text-white font-black text-3xl italic tracking-tight">Kumpuni Go!</h1>
+      <h1 className="text-3xl font-black leading-tight mb-1">
+        <span className="text-white italic">Kumpuni</span>
+        <span className="text-[#27ae60] italic">Go!</span>
+      </h1>
         <div className="mt-3 bg-[#27ae60]/20 border border-[#27ae60]/40 px-4 py-1.5 rounded-full">
           <span className="text-[#27ae60] text-[11px] font-black tracking-widest uppercase">Version 1.0.0</span>
         </div>

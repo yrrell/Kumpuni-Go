@@ -27,8 +27,7 @@ export const LoadingScreen = () => {
         <span className="text-[#27ae60] italic">Go!</span>
       </h1>
 
-      <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-10">
-        Vulcanizing · Motor Repair · Philippines
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-10">Find Nearest · Vulcanizing · Motorshop
       </p>
 
       {/* Status */}
@@ -43,7 +42,7 @@ export const LoadingScreen = () => {
       </div>
 
       <p className="text-white/20 text-[10px] font-black uppercase tracking-widest">
-        Find Shops · Navigate · Contribute
+        Navigate · Contribute · Philippines
       </p>
     </div>
   );
