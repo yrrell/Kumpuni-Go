@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const html = `
     <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#f8fafc;border-radius:16px;">
       <!-- ✅ FIXED: Was https://kumpunigo.vercel.app (no hyphen, broken). Now uses env var. -->
-      <img src="${appUrl}/assets/kumpuni-go-logo.png" width="60" style="margin-bottom:16px;" />
+      <img src="${appUrl}/kumpuni-go-logo.png" width="60" style="margin-bottom:16px;" />
       <h2 style="color:#1a3a3a;margin:0 0 8px;">
         ${type === 'update' ? '✏️ Update Request' : '📍 New Contribution'}
       </h2>

@@ -11,7 +11,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>Kumpuni Go!</title>
         <meta name="description" content="Find nearby vulcanizing and motor shops." />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        <link rel="icon" href="/assets/kumpuni-go-logo.png" />
+        <link rel="icon" href="/kumpuni-go-logo.png" />
       </Head>
       <Component {...pageProps} />
     </LocationProvider>

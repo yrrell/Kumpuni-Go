@@ -62,7 +62,7 @@ export default function SignIn() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white text-center">
         <img
-          src="/assets/kumpuni-go-logo.png"
+          src="/kumpuni-go-logo.png"
           alt="Kumpuni Go"
           className="w-16 h-16 rounded-full object-cover mb-5"
         />
@@ -115,7 +115,7 @@ export default function SignIn() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white text-center">
       <img
-        src="/assets/kumpuni-go-logo.png"
+        src="/kumpuni-go-logo.png"
         alt="Kumpuni Go"
         className="w-20 h-20 rounded-full object-cover mb-6"
       />
