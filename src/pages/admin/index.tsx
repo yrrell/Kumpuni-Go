@@ -330,7 +330,7 @@ export default function AdminPanel() {
   // ── Auth screen ──
   if (!adminAuthed) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a3a3a] text-center">
-      <img src="/kumpuni-go-logo.png" alt="Logo" className="w-20 h-20 rounded-full mb-6 object-cover" />
+      <img src="/assets/kumpuni-go-logo.png" alt="Logo" className="w-20 h-20 rounded-full mb-6 object-cover" />
       <h1 className="text-white font-black text-xl uppercase italic mb-1">Admin Panel</h1>
       <p className="text-gray-400 text-xs font-bold mb-8 uppercase tracking-widest">Kumpuni Go</p>
       <input type="password" placeholder="Admin Password" value={adminPass}

@@ -299,11 +299,6 @@ export default function App() {
         {activeTab === 'home' && (
           <div className="space-y-4">
             <div className="w-full bg-[#27ae60] p-7 rounded-[2.5rem] shadow-lg shadow-green-200 text-center">
-              <h2 className="text-white font-black italic uppercase text-2xl leading-tight">Find Nearby Shops</h2>
-              {/* Live location from context — updates when GPS changes */}
-              <p className="text-green-100 text-xs font-bold mt-2 uppercase tracking-widest">
-                📍 {locationInfo.display}
-              </p>
               {dbShops.length > 0 && (
                 <p className="text-green-200 text-[10px] font-bold mt-1">
                   🟢 {dbShops.length} verified community shop{dbShops.length !== 1 ? 's' : ''} live
