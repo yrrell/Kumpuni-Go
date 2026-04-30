@@ -299,11 +299,29 @@ export default function App() {
         {activeTab === 'home' && (
           <div className="space-y-4">
             <div className="w-full bg-[#27ae60] p-7 rounded-[2.5rem] shadow-lg shadow-green-200 text-center">
-              {dbShops.length > 0 && (
-                <p className="text-green-200 text-[10px] font-bold mt-1">
-                  🟢 {dbShops.length} verified community shop{dbShops.length !== 1 ? 's' : ''} live
-                </p>
-              )}
+<div className="w-full bg-[#1a3a3a] p-6 rounded-[2.5rem] shadow-lg shadow-gray-200">
+  <p className="text-green-400 text-[10px] font-black uppercase tracking-widest mb-3">
+    📡 Live Community Directory
+  </p>
+  <div className="grid grid-cols-3 gap-3">
+    <div className="bg-[#27ae60] rounded-2xl p-3 text-center">
+      <p className="text-white font-black text-xl">{dbShops.length}</p>
+      <p className="text-green-200 text-[9px] font-black uppercase">Shops</p>
+    </div>
+    <div className="bg-white/10 rounded-2xl p-3 text-center">
+      <p className="text-white font-black text-xl">
+        {dbShops.filter((s: any) => s.isOpen).length}
+      </p>
+      <p className="text-gray-300 text-[9px] font-black uppercase">Open Now</p>
+    </div>
+    <div className="bg-white/10 rounded-2xl p-3 text-center">
+      <p className="text-white font-black text-xl">
+        {filtered.length}
+      </p>
+      <p className="text-gray-300 text-[9px] font-black uppercase">Near You</p>
+    </div>
+  </div>
+</div>
             </div>
 
             <div className="relative">
