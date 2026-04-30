@@ -16,9 +16,7 @@ export function Header({ locationDisplay }: HeaderProps) {
   return (
     <header className="bg-white dark:bg-[#0f1f1f] px-5 py-3 flex items-center justify-between border-b border-gray-50 dark:border-white/10 sticky top-0 z-50 shadow-sm transition-colors">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#27ae60] rounded-xl flex items-center justify-center shadow-md">
-          <span className="text-white text-lg">🔧</span>
-        </div>
+        <img src="/kumpuni-go-logo.png" alt="Kumpuni Go" className="w-10 h-10 rounded-xl object-cover shadow-md" />
         <div>
           <h1 className="font-black text-base leading-tight">
             <span className="text-[#1a3a3a] dark:text-white italic">Kumpuni</span>

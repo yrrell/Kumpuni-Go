@@ -14,15 +14,17 @@ export const LoadingScreen = () => {
   return (
     <div className="fixed inset-0 bg-[#0f1f1f] flex flex-col items-center justify-center z-50 px-10">
 
-      {/* Logo Icon */}
-      <div className="w-20 h-20 bg-[#27ae60] rounded-2xl flex items-center justify-center shadow-2xl shadow-green-900 mb-6">
-        <span className="text-4xl">🔧</span>
-      </div>
+      {/* Logo */}
+      <img
+        src="/kumpuni-go-logo.png"
+        alt="Kumpuni Go"
+        className="w-24 h-24 rounded-2xl object-cover shadow-2xl shadow-green-900 mb-6"
+      />
 
-      {/* Name Label — GetGas style */}
+      {/* Name Label */}
       <h1 className="text-3xl font-black leading-tight mb-1">
-        <span className="text-white">Kumpuni</span>
-        <span className="text-[#27ae60]">Go!</span>
+        <span className="text-white italic">Kumpuni</span>
+        <span className="text-[#27ae60] italic">Go!</span>
       </h1>
 
       <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-10">
