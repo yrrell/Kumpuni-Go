@@ -8,13 +8,17 @@
 }
 
 body {
-  @apply bg-[#f8fafc] text-slate-900 antialiased;
+  @apply bg-[#f8fafc] dark:bg-[#0a0a0a] text-slate-900 dark:text-white antialiased transition-colors duration-300;
   font-family: sans-serif;
+}
+
+html {
+  @apply transition-colors duration-300;
 }
 
 /* Custom card shadow for that premium feel */
 .aura-card {
-  @apply bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-all active:scale-[0.98];
+  @apply bg-white dark:bg-[#1a1a1a] rounded-[2rem] border border-gray-100 dark:border-white/10 shadow-sm transition-all active:scale-[0.98];
 }
 
 .nav-active {
