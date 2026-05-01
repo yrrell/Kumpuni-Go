@@ -210,7 +210,7 @@ export default function AddShop() {
     const finalLng = pinLocation?.lng ?? location?.lng ?? 120.5333;
     const brgy = [form.municipality, form.province].filter(Boolean).join(', ');
 
-    // Upload evidence photo to public/assets/evidence_photo/
+    // Upload evidence photo to Supabase Storage bucket 'assets'
     let evidence_url = '';
     if (evidenceFile) {
       try {
@@ -219,12 +219,15 @@ export default function AddShop() {
         const shopSlug = safeName(form.name);
         const fileName = `evidence_photo/new_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
         const { data: up, error: upErr } = await supabase.storage
-          .from('public')
-          .upload(`assets/${fileName}`, evidenceFile, { upsert: true, contentType: evidenceFile.type });
+          .from('assets')
+          .upload(fileName, evidenceFile, { upsert: true, contentType: evidenceFile.type });
         if (upErr) {
           console.error('Evidence upload error:', upErr.message);
         } else if (up) {
-          evidence_url = `/assets/${fileName}`;
+          const { data: publicUrlData } = supabase.storage
+            .from('assets')
+            .getPublicUrl(fileName);
+          evidence_url = publicUrlData.publicUrl;
         }
         setUploadProgress(null);
       } catch (err) {

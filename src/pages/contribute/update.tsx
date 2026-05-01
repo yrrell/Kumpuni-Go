@@ -251,7 +251,7 @@ export default function UpdateShop() {
     }
     setLoading(true);
 
-    // Upload evidence photo to public/assets/evidence_photo/
+    // Upload evidence photo to Supabase Storage bucket 'assets'
     let evidence_url = '';
     if (evidenceFile) {
       try {
@@ -260,12 +260,15 @@ export default function UpdateShop() {
         const shopSlug = safeName(selectedShop.name);
         const fileName = `evidence_photo/update_${shopSlug}_${user.id.slice(0, 8)}_${Date.now()}.${ext}`;
         const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('public')
-          .upload(`assets/${fileName}`, evidenceFile, { contentType: evidenceFile.type });
+          .from('assets')
+          .upload(fileName, evidenceFile, { contentType: evidenceFile.type });
         if (uploadErr) {
           console.error('Evidence upload error:', uploadErr.message);
         } else if (uploadData) {
-          evidence_url = `/assets/${fileName}`;
+          const { data: publicUrlData } = supabase.storage
+            .from('assets')
+            .getPublicUrl(fileName);
+          evidence_url = publicUrlData.publicUrl;
         }
         setUploadProgress(null);
       } catch (err) {
