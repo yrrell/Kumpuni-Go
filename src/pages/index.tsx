@@ -154,7 +154,7 @@ export default function App() {
 
       const popupContent = `
         <div style="font-family:sans-serif;min-width:150px;padding:2px 0">
-          <b style="font-size:13px;color:#1a3a3a;text-transform:uppercase">${shop.name}</b><br/>
+          <b style="font-size:13px;color:inherit;text-transform:uppercase">${shop.name}</b><br/>
           <span style="font-size:11px;color:#888">${shop.brgy}</span><br/>
           <span style="font-size:10px;color:${isOpen ? '#27ae60' : '#ef4444'};font-weight:700">
             ${isOpen ? '● OPEN' : '● CLOSED'}
@@ -231,7 +231,7 @@ export default function App() {
     <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-50">
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1 min-w-0">
-          <h4 className="text-[#1a3a3a] font-black text-lg leading-tight uppercase">
+          <h4 className="text-theme font-black text-lg leading-tight uppercase">
             {shop.name}
           </h4>
           <p className="text-gray-500 text-xs font-bold mt-1">
@@ -256,11 +256,11 @@ export default function App() {
       )}
       <div className="grid grid-cols-3 gap-3 mt-5">
         <button onClick={() => handleCall(shop)}
-          className="flex flex-col items-center py-3 bg-gray-50 rounded-2xl text-[#1a3a3a] active:bg-gray-100 transition-all">
+          className="flex flex-col items-center py-3 bg-gray-50 dark:bg-[#1f1f1f] rounded-2xl text-theme active:bg-gray-100 dark:active:bg-[#2a2a2a] transition-all">
           <Phone size={18} /><span className="text-[9px] font-black mt-1">CALL</span>
         </button>
         <button onClick={() => handleSms(shop)}
-          className="flex flex-col items-center py-3 bg-gray-50 rounded-2xl text-[#1a3a3a] active:bg-gray-100 transition-all">
+          className="flex flex-col items-center py-3 bg-gray-50 dark:bg-[#1f1f1f] rounded-2xl text-theme active:bg-gray-100 dark:active:bg-[#2a2a2a] transition-all">
           <MessageSquare size={18} /><span className="text-[9px] font-black mt-1">SMS</span>
         </button>
         <a href={goNowUrl(shop.lat, shop.lng, shop.name)}
@@ -283,10 +283,10 @@ export default function App() {
           onClick={() => setNoContactAlert(null)}>
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
             <p className="text-2xl mb-3 text-center">📵</p>
-            <h3 className="text-[#1a3a3a] font-black text-base uppercase text-center mb-2">No Contact Number</h3>
+            <h3 className="text-theme font-black text-base uppercase text-center mb-2">No Contact Number</h3>
             <p className="text-gray-500 text-[12px] font-bold text-center leading-relaxed">{noContactAlert}</p>
             <button onClick={() => setNoContactAlert(null)}
-              className="w-full mt-5 bg-[#1a3a3a] text-white py-3 rounded-2xl font-black text-sm">
+              className="w-full mt-5 bg-[#27ae60] text-white py-3 rounded-2xl font-black text-sm">
               OK, Got It
             </button>
           </div>
@@ -302,7 +302,7 @@ export default function App() {
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search Shop/Municipality/City/ Province..."
-                className="w-full pl-10 pr-4 py-4 bg-white rounded-2xl text-sm font-bold text-[#1a3a3a]
+                className="w-full pl-10 pr-4 py-4 bg-white dark:bg-[#1f1f1f] rounded-2xl text-sm font-bold text-theme
                   border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
             </div>
 
@@ -388,7 +388,7 @@ export default function App() {
             <div key={shop.id}
               className="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-50 flex justify-between items-center gap-3">
               <div className="flex-1 min-w-0">
-                <h4 className="text-[#1a3a3a] font-black text-base leading-tight truncate uppercase">{shop.name}</h4>
+                <h4 className="text-theme font-black text-base leading-tight truncate uppercase">{shop.name}</h4>
                 <p className="text-gray-400 text-[11px] font-bold mt-0.5">
                   {shop.brgy} • <span className="text-[#27ae60]">{formatDistance(shop.dist)}</span>
                 </p>
@@ -410,12 +410,12 @@ export default function App() {
         {activeTab === 'contribute' && (
           <div className="space-y-4 pt-2">
             <div className="text-center pb-1">
-              <h2 className="text-[#1a3a3a] font-black text-2xl uppercase italic">Contribute</h2>
+              <h2 className="text-theme font-black text-2xl uppercase italic">Contribute</h2>
               <p className="text-gray-400 text-xs font-bold mt-1">Help your community find shops!</p>
             </div>
 
             <div className="bg-green-50 rounded-3xl p-5">
-              <p className="text-[#1a3a3a] font-black text-xs uppercase tracking-wide mb-2">How it works</p>
+              <p className="text-theme font-black text-xs uppercase tracking-wide mb-2">How it works</p>
               <p className="text-gray-500 text-[11px] font-bold leading-relaxed">
                 1. Sign in with Google (anti-scam verification)<br />
                 2. Pin the shop on the map & fill in details<br />

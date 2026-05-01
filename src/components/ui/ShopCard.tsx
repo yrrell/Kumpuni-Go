@@ -9,7 +9,7 @@ export const ShopCard = ({ shop, distance }: any) => {
     <div className="bg-white rounded-[2rem] p-6 mb-5 shadow-sm border border-gray-50">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-xl font-black text-[#1a3a3a]">{shop.name}</h3>
+          <h3 className="text-xl font-black text-theme">{shop.name}</h3>
           <p className="text-[11px] font-bold text-gray-400 mt-1">
             📍 {shop.brgy} •{' '}
             <span className="text-[#27ae60]">{formatDistance(km)} away</span>
@@ -27,14 +27,14 @@ export const ShopCard = ({ shop, distance }: any) => {
       <div className="grid grid-cols-3 gap-3 mt-6">
         <a
           href={`tel:${shop.contact}`}
-          className="flex flex-col items-center py-3 bg-gray-50 rounded-2xl text-[#1a3a3a]"
+          className="flex flex-col items-center py-3 bg-gray-50 dark:bg-[#1f1f1f] rounded-2xl text-theme"
         >
           <Phone size={18} />
           <span className="text-[8px] font-black mt-1">CALL</span>
         </a>
         <a
           href={`sms:${shop.contact}`}
-          className="flex flex-col items-center py-3 bg-gray-50 rounded-2xl text-[#1a3a3a]"
+          className="flex flex-col items-center py-3 bg-gray-50 dark:bg-[#1f1f1f] rounded-2xl text-theme"
         >
           <MessageSquare size={18} />
           <span className="text-[8px] font-black mt-1">SMS</span>

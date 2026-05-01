@@ -68,7 +68,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-start gap-2">
       <span className="text-gray-500 text-xs font-semibold min-w-[110px]">{label}</span>
-      <span className="text-gray-900 text-xs text-right flex-1">{value}</span>
+      <span className="text-theme text-xs text-right flex-1">{value}</span>
     </div>
   );
 }
@@ -81,7 +81,7 @@ function SummaryModal({ item, onClose }: { item: AnyContrib; onClose: () => void
     <div className="fixed inset-0 bg-black/60 z-[9999] flex items-end sm:items-center justify-center">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-white flex justify-between items-center px-5 pt-5 pb-3 border-b border-gray-100">
-          <h2 className="font-extrabold text-gray-900 text-base">
+          <h2 className="font-extrabold text-theme text-base">
             {item.kind === "shop" ? "📋 New Shop Submission" : "📋 Shop Update Submission"}
           </h2>
           <button onClick={onClose} className="text-gray-400 text-xl leading-none">✕</button>
@@ -168,7 +168,7 @@ function SummaryModal({ item, onClose }: { item: AnyContrib; onClose: () => void
               🗺️ View New Location on Maps
             </a>
           )}
-          <button onClick={onClose} className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-full text-sm">Close</button>
+          <button onClick={onClose} className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-theme font-bold py-3 rounded-full text-sm">Close</button>
         </div>
       </div>
     </div>
@@ -201,7 +201,7 @@ function EditShopModal({ item, onClose, onSaved }: { item: ShopContrib; onClose:
     <div className="fixed inset-0 bg-black/60 z-[9999] flex items-end sm:items-center justify-center">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white flex justify-between items-center px-5 pt-5 pb-3 border-b border-gray-100">
-          <h2 className="font-extrabold text-gray-900 text-base">✏️ Edit Submission</h2>
+          <h2 className="font-extrabold text-theme text-base">✏️ Edit Submission</h2>
           <button onClick={onClose} className="text-gray-400 text-xl leading-none">✕</button>
         </div>
         <div className="px-5 py-4 space-y-4">
@@ -248,7 +248,7 @@ function EditShopModal({ item, onClose, onSaved }: { item: ShopContrib; onClose:
             className="w-full bg-green-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-full text-sm">
             {saving ? "Saving…" : "💾 Save Changes"}
           </button>
-          <button onClick={onClose} className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-full text-sm">Cancel</button>
+          <button onClick={onClose} className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-theme font-bold py-3 rounded-full text-sm">Cancel</button>
         </div>
       </div>
     </div>
@@ -272,10 +272,10 @@ function DeleteConfirmModal({ item, onClose, onDeleted }: { item: AnyContrib; on
     <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center px-6">
       <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center">
         <div className="text-4xl mb-3">🗑️</div>
-        <h2 className="font-extrabold text-gray-900 text-lg mb-1">Delete Submission?</h2>
+        <h2 className="font-extrabold text-theme text-lg mb-1">Delete Submission?</h2>
         <p className="text-sm text-gray-600 mb-5">
           Are you sure you want to delete{" "}
-          <span className="font-bold text-gray-900">&quot;{displayName}&quot;</span>?
+          <span className="font-bold text-theme">&quot;{displayName}&quot;</span>?
           <br /><span className="text-xs text-red-500">This cannot be undone.</span>
         </p>
         <div className="space-y-2">
@@ -283,7 +283,7 @@ function DeleteConfirmModal({ item, onClose, onDeleted }: { item: AnyContrib; on
             className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-full text-sm">
             {deleting ? "Deleting…" : "🗑️ Yes, Delete"}
           </button>
-          <button onClick={onClose} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-full text-sm">
+          <button onClick={onClose} className="w-full bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 text-theme font-bold py-3 rounded-full text-sm">
             Cancel
           </button>
         </div>
@@ -318,7 +318,7 @@ function ContribCard({ item, onSummary, onEdit, onDelete }: {
           </span>
         </div>
 
-        <p className="font-extrabold text-gray-900 text-sm leading-tight">{displayName}</p>
+        <p className="font-extrabold text-theme text-sm leading-tight">{displayName}</p>
         <p className="text-xs text-gray-500 mt-0.5">{displayAddress}</p>
         <p className="text-xs text-gray-400 mt-0.5">{displayType} • {formatDate(item.submitted_at)}</p>
 
@@ -450,7 +450,7 @@ export default function MyContributions() {
       <div className="bg-white border-b border-gray-100 flex items-center gap-3 px-4 pt-5 pb-4">
         <button onClick={() => router.back()} className="text-gray-600 text-2xl font-bold leading-none">‹</button>
         <div>
-          <h1 className="text-lg font-extrabold tracking-wide text-gray-900 leading-tight">MY CONTRIBUTIONS</h1>
+          <h1 className="text-lg font-extrabold tracking-wide text-theme leading-tight">MY CONTRIBUTIONS</h1>
           {!loading && (
             <p className="text-xs text-gray-400">{contributions.length} submission{contributions.length !== 1 ? "s" : ""}</p>
           )}

@@ -206,3 +206,27 @@ body {
 .border-theme   { border-color: var(--border); }
 .bg-theme-card  { background-color: var(--bg-card); }
 .bg-theme-page  { background-color: var(--bg-page); }
+
+/* ─────────────────────────────────────────────────────────────────
+   DARK: ADDITIONAL TEXT OVERRIDES
+   Catches any remaining hardcoded dark text values that should
+   appear white/light in dark mode.
+───────────────────────────────────────────────────────────────── */
+.dark [class~="text-gray-900"],
+.dark [class~="text-gray-800"],
+.dark [class~="text-gray-700"] {
+  color: var(--text-base) !important;
+}
+.dark [class~="text-gray-600"] {
+  color: var(--text-muted) !important;
+}
+
+/* CALL/SMS button dark backgrounds */
+.dark [class~="bg-gray-50"] {
+  background-color: #1f1f1f !important;
+}
+
+/* Modal close/cancel buttons */
+.dark .modal-card [class~="bg-gray-100"] {
+  background-color: #2a2a2a !important;
+}
