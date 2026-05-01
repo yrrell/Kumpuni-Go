@@ -3,6 +3,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { LocationProvider } from '../context/LocationContext';
+import { InAppBrowserNotice } from '../components/ui/InAppBrowserNotice';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
