@@ -37,6 +37,16 @@ function detectInAppBrowserPlatform(): string | null {
   if (/Reddit/i.test(ua))                              return 'Reddit';
   if (/Discord/i.test(ua))                             return 'Discord';
 
+  // ── Generic catch-all ──────────────────────────────────────────────────────
+  // Android WebView always contains "; wv)" in the UA string.
+  // This catches Telegram (which doesn't self-identify), Gmail, Samsung apps,
+  // and any other in-app browser that uses Android's built-in WebView.
+  if (/; wv\)/i.test(ua))                             return 'this App';
+
+  // iOS in-app browsers (that aren't already caught above) use a Safari
+  // WebView and typically lack the normal "Safari" token at the end of the UA.
+  if (/iPhone|iPad|iPod/i.test(ua) && !/Safari\//i.test(ua)) return 'this App';
+
   return null;
 }
 
@@ -132,10 +142,10 @@ export const InAppBrowserNotice = () => {
           <div>
             <p className="text-white font-black text-sm mb-1">Inaccurate Location Detected</p>
             <p className="text-white/60 text-xs font-bold leading-relaxed">
-              You&apos;re inside{' '}
-              <span className="text-white font-black">{platform}</span>
-              &apos;s browser. GPS is limited here — open in Chrome or your
-              default browser for precise location.
+              {platform === 'this App'
+                ? <>You&apos;re inside an <span className="text-white font-black">in-app browser</span>. GPS is limited here — open in Chrome or your default browser for precise location.</>
+                : <>You&apos;re inside <span className="text-white font-black">{platform}</span>&apos;s browser. GPS is limited here — open in Chrome or your default browser for precise location.</>
+              }
             </p>
           </div>
         </div>
@@ -190,7 +200,7 @@ export const InAppBrowserNotice = () => {
             onClick={handleGoBack}
             className="flex-1 py-3 rounded-2xl border border-white/20 text-white/60 font-black text-sm"
           >
-            ‹ Back in {platform}
+            {platform === 'this App' ? '‹ Go Back' : `‹ Back in ${platform}`}
           </button>
 
           {/* Go Now — opens in default external browser */}
