@@ -98,7 +98,7 @@ export const LoadingScreen = () => {
         <span className="text-[#27ae60] italic">Go!</span>
       </h1>
 
-      <p className="text-white/20 text-[11px] font-black uppercase tracking-widest mb-10">
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-10">
         Find Nearest · Vulcanizing · Motorshop
       </p>
 
