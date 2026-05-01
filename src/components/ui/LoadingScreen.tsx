@@ -3,10 +3,6 @@ import React, { useEffect, useState } from 'react';
 
 export const LoadingScreen = () => {
   const [progress, setProgress] = useState(20);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [intentHref, setIntentHref] = useState('');
-  const [pageUrl, setPageUrl] = useState('');
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -15,134 +11,30 @@ export const LoadingScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const ua = navigator.userAgent || '';
-    const detected = /FBAN|FBAV|FB_IAB|FB4A|FBIOS|Instagram|Messenger|\[FB\]/i.test(ua);
-    setIsInAppBrowser(detected);
-
-    if (detected) {
-      const url = window.location.href;
-      const host = window.location.host;
-      const path = window.location.pathname + window.location.search + window.location.hash;
-      setPageUrl(url);
-      // Build intent URL once so <a href> can use it directly — no JS navigation at all
-      setIntentHref(
-        `intent://${host}${path}` +
-        `#Intent;scheme=https;` +
-        `action=android.intent.action.VIEW;` +
-        `category=android.intent.category.BROWSABLE;` +
-        `S.browser_fallback_url=${encodeURIComponent(url)};end`
-      );
-    }
-  }, []);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(pageUrl);
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = pageUrl;
-      ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
   return (
     <div className="fixed inset-0 bg-[#0f1f1f] flex flex-col items-center justify-center z-50 px-10">
-
-      {/* Logo */}
       <img
         src="/kumpuni-go-logo.png"
         alt="Kumpuni Go"
         className="w-24 h-24 rounded-2xl object-cover shadow-2xl shadow-green-900 mb-6"
       />
-
-      {/* Title */}
       <h1 className="text-3xl font-black leading-tight mb-1">
         <span className="text-white italic">Kumpuni</span>
         <span className="text-[#27ae60] italic">Go!</span>
       </h1>
-
-      <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-10">
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-10">
         Find Nearest · Vulcanizing · Motorshop
       </p>
-
       <p className="text-green-400 font-bold text-sm mb-4">Detecting your location...</p>
-
       <div className="w-full max-w-xs h-1 bg-white/10 rounded-full overflow-hidden mb-8">
         <div
           className="h-full bg-[#27ae60] rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
-
       <p className="text-white/20 text-[10px] font-black uppercase tracking-widest">
         Find Shops · Navigate · Contribute
       </p>
-
-      {/* ── In-App Browser Banner ── */}
-      {isInAppBrowser && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#1a2e2e] border-t border-white/10 rounded-t-3xl p-6 shadow-2xl">
-
-          {/* Header */}
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-yellow-400 text-lg">📍</span>
-            </div>
-            <div>
-              <p className="text-white font-black text-sm mb-1">Inaccurate Location Detected</p>
-              <p className="text-white/60 text-xs font-bold leading-relaxed">
-                You&apos;re inside <span className="text-white font-black">Facebook</span>&apos;s
-                browser. GPS is limited here — open in your device&apos;s browser for precise location.
-              </p>
-            </div>
-          </div>
-
-          {/* Primary action: real <a> tag — not a button, not JS navigation */}
-          {/* Facebook WebView cannot block a direct anchor tap the same way */}
-          <a
-            href={intentHref}
-            className="block w-full py-3.5 rounded-2xl bg-[#27ae60] text-white font-black text-sm text-center shadow-lg shadow-green-900/40 active:scale-95 transition-transform mb-3"
-          >
-            🌐 Open in Browser (Go Now)
-          </a>
-
-          {/* URL copy row — always visible, no waiting */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-2">
-            <p className="flex-1 text-[#27ae60] text-[10px] font-black truncate select-all">
-              {pageUrl}
-            </p>
-            <button
-              onClick={handleCopy}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-xl font-black text-[10px] transition-all active:scale-95 ${
-                copied
-                  ? 'bg-white/20 text-white/60'
-                  : 'bg-white/10 text-white'
-              }`}
-            >
-              {copied ? '✅ Copied' : '📋 Copy'}
-            </button>
-          </div>
-
-          <p className="text-white/30 text-[10px] font-bold text-center mb-3">
-            If the button doesn&apos;t work — copy the link above and paste it in Chrome.
-          </p>
-
-          <button
-            onClick={() => setIsInAppBrowser(false)}
-            className="w-full py-2.5 rounded-2xl border border-white/10 text-white/40 font-black text-xs"
-          >
-            ‹ Continue anyway (inaccurate location)
-          </button>
-        </div>
-      )}
     </div>
   );
 };

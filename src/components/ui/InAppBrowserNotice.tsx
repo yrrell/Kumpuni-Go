@@ -1,134 +1,139 @@
 // src/components/ui/InAppBrowserNotice.tsx
 import React, { useEffect, useState } from 'react';
 
-// ─── Detection ───────────────────────────────────────────────────────────────
-
-function detectInAppBrowser(): { isInApp: boolean; platform: string } {
-  if (typeof window === 'undefined') return { isInApp: false, platform: '' };
+function detectPlatform() {
+  if (typeof window === 'undefined') return 'android';
   const ua = navigator.userAgent || '';
-  if (/FBAN|FBAV|FB_IAB|FBIOS|FBDV|FBMD|FBSN|FBSV|FBSS|MessengerForiOS/i.test(ua))
-    return { isInApp: true, platform: 'Facebook' };
-  if (/Instagram/i.test(ua)) return { isInApp: true, platform: 'Instagram' };
-  if (/musical_ly|TikTok/i.test(ua)) return { isInApp: true, platform: 'TikTok' };
-  if (/Twitter/i.test(ua)) return { isInApp: true, platform: 'X (Twitter)' };
-  if (/\bLine\b/i.test(ua)) return { isInApp: true, platform: 'LINE' };
-  if (/MicroMessenger/i.test(ua)) return { isInApp: true, platform: 'WeChat' };
-  if (/Snapchat/i.test(ua)) return { isInApp: true, platform: 'Snapchat' };
-  return { isInApp: false, platform: '' };
+  return /iPad|iPhone|iPod/.test(ua) ? 'ios' : 'android';
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function isInAppBrowser() {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|FB_IAB|FB4A|FBIOS|Instagram|Messenger|\[FB\]/i.test(ua);
+}
 
-export function InAppBrowserNotice() {
-  const [visible, setVisible] = useState(false);
-  const [platform, setPlatform] = useState('');
-  const [url, setUrl] = useState('');
+export const InAppBrowserNotice = () => {
+  const [show, setShow] = useState(false);
+  const [chromeHref, setChromeHref] = useState('#');
+  const [defaultHref, setDefaultHref] = useState('#');
 
   useEffect(() => {
-    const { isInApp, platform } = detectInAppBrowser();
-    if (isInApp) {
-      setVisible(true);
-      setPlatform(platform);
-      setUrl(window.location.href);
+    if (!isInAppBrowser()) return;
+    setShow(true);
+
+    const url  = window.location.href;
+    const host = window.location.host;
+    const path = window.location.pathname + window.location.search + window.location.hash;
+    const platform = detectPlatform();
+
+    if (platform === 'ios') {
+      // iOS: googlechromes:// opens Chrome; bare https:// is the best we can do for default
+      setChromeHref(`googlechromes://${host}${path}`);
+      setDefaultHref(url); // tapping a plain <a> on iOS FB browser sometimes escapes the WebView
+    } else {
+      // Android: intent:// is the OS-level redirect — bypasses WebView security
+      const base = `intent://${host}${path}#Intent;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)}`;
+      setChromeHref(`${base};package=com.android.chrome;end`);
+      setDefaultHref(`${base};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`);
     }
   }, []);
 
-  if (!visible) return null;
-
-  const target = url || (typeof window !== 'undefined' ? window.location.href : '');
-
-  // ── Go back to the platform app ──────────────────────────────────────────
-  // window.close() tells the WebView to close itself and return to the host
-  // app (Facebook, Messenger, Instagram, etc.). Falls back to history.back()
-  // on the rare case the WebView doesn't honour close().
-  const handleGoBack = () => {
-    try {
-      window.close();
-      // If close() is ignored (some WebViews block it), fall back after 300 ms
-      setTimeout(() => {
-        if (!document.hidden) window.history.back();
-      }, 300);
-    } catch {
-      window.history.back();
-    }
-  };
-
-  // ── Open in the user's real browser ─────────────────────────────────────
-  // window.open with _blank triggers the platform's native "You're leaving
-  // our app → Continue" dialog. Tapping Continue opens the URL in whatever
-  // browser the user has set as default — no guessing of installed apps needed.
-  const handleGoNow = () => {
-    const a = document.createElement('a');
-    a.href = target;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] px-4 pb-5 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-sm mx-auto bg-[#0f1f1f] rounded-2xl shadow-2xl shadow-black/60 border border-white/10 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
+      {/* Dim backdrop */}
+      <div className="absolute inset-0 bg-black/60" onClick={() => setShow(false)} />
 
-        {/* Accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#27ae60] to-[#1abc9c]" />
+      {/* Sheet */}
+      <div className="relative bg-[#1a2e2e] rounded-t-3xl p-6 shadow-2xl border-t border-white/10">
 
-        <div className="px-4 pt-4 pb-4">
-
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-400/15 flex items-center justify-center">
-              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-            </span>
-            <p className="text-white font-black text-sm">Inaccurate Location Detected</p>
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-5">
+          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+            <span className="text-yellow-400 text-lg">📍</span>
           </div>
+          <div>
+            <p className="text-white font-black text-sm mb-1">Inaccurate Location Detected</p>
+            <p className="text-white/60 text-xs font-bold leading-relaxed">
+              You&apos;re inside <span className="text-white font-black">Facebook</span>&apos;s browser.
+              GPS is limited here — open in Chrome or your default browser for precise location.
+            </p>
+          </div>
+        </div>
 
-          {/* Body */}
-          <p className="text-white/55 text-xs leading-relaxed mb-4">
-            You're inside{' '}
-            <span className="text-white/80 font-semibold">{platform}</span>'s browser.
-            GPS is limited here — tap{' '}
-            <span className="text-[#27ae60] font-semibold">Go Now</span> to open in
-            your device's browser for precise location.
+        {/* Browser picker — only Chrome + Default */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5">
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-4">
+            Choose a Browser
           </p>
 
-          {/* Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-4 justify-center">
 
-            {/* ← Back in [Platform] — closes the WebView, returns to app */}
-            <button
-              onClick={handleGoBack}
-              className="flex-1 bg-white/8 hover:bg-white/15 active:scale-95 text-white/65 font-bold text-[11px] py-3 px-2 rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 border border-white/10"
+            {/* Chrome */}
+            <a
+              href={chromeHref}
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
             >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              <span className="truncate">Back in {platform}</span>
-            </button>
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                {/* Chrome SVG icon */}
+                <svg width="32" height="32" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="10" fill="#fff"/>
+                  <path fill="#EA4335" d="M24 14h18.4A23.9 23.9 0 0 0 24 .1V14z"/>
+                  <path fill="#FBBC05" d="M5.6 38A24 24 0 0 0 24 48V34.6L5.6 38z"/>
+                  <path fill="#4285F4" d="M5.6 38L14 24H.1A24 24 0 0 0 5.6 38z"/>
+                  <path fill="#34A853" d="M24 34.6V48a24 24 0 0 0 18.4-10L24 34.6z"/>
+                  <path fill="#EA4335" d="M42.4 38L34 24h8.4A24 24 0 0 1 24 48v-1.4l18.4-8.6z"/>
+                  <circle cx="24" cy="24" r="8" fill="#fff"/>
+                  <circle cx="24" cy="24" r="6" fill="#4285F4"/>
+                </svg>
+              </div>
+              <span className="text-white text-[11px] font-black">Chrome</span>
+            </a>
 
-            {/* Go Now — opens via _blank, platform shows "leave app" → opens default browser */}
-            <button
-              onClick={handleGoNow}
-              className="flex-1 bg-[#27ae60] hover:bg-[#219a54] active:scale-95 text-white font-black text-[11px] py-3 px-2 rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 shadow-lg shadow-green-900/40"
+            {/* Default Browser */}
+            <a
+              href={defaultHref}
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
             >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-              Go Now
-            </button>
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </div>
+              <span className="text-white text-[11px] font-black">Default</span>
+            </a>
 
           </div>
         </div>
+
+        {/* Bottom buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShow(false)}
+            className="flex-1 py-3 rounded-2xl border border-white/20 text-white/60 font-black text-sm"
+          >
+            ‹ Back in Facebook
+          </button>
+
+          {/* Go Now = Default browser */}
+          <a
+            href={defaultHref}
+            className="flex-1 py-3 rounded-2xl bg-[#27ae60] text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-900/40 active:scale-95 transition-transform"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            Go Now
+          </a>
+        </div>
+
       </div>
     </div>
   );
-}
+};
