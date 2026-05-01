@@ -28,11 +28,9 @@ export const InAppBrowserNotice = () => {
     const platform = detectPlatform();
 
     if (platform === 'ios') {
-      // iOS: googlechromes:// opens Chrome; bare https:// is the best we can do for default
       setChromeHref(`googlechromes://${host}${path}`);
-      setDefaultHref(url); // tapping a plain <a> on iOS FB browser sometimes escapes the WebView
+      setDefaultHref(url);
     } else {
-      // Android: intent:// is the OS-level redirect — bypasses WebView security
       const base = `intent://${host}${path}#Intent;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)}`;
       setChromeHref(`${base};package=com.android.chrome;end`);
       setDefaultHref(`${base};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`);
@@ -63,7 +61,7 @@ export const InAppBrowserNotice = () => {
           </div>
         </div>
 
-        {/* Browser picker — only Chrome + Default */}
+        {/* Browser picker */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5">
           <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-4">
             Choose a Browser
@@ -77,16 +75,15 @@ export const InAppBrowserNotice = () => {
               className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
             >
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
-                {/* Chrome SVG icon */}
-                <svg width="32" height="32" viewBox="0 0 48 48">
-                  <circle cx="24" cy="24" r="10" fill="#fff"/>
-                  <path fill="#EA4335" d="M24 14h18.4A23.9 23.9 0 0 0 24 .1V14z"/>
-                  <path fill="#FBBC05" d="M5.6 38A24 24 0 0 0 24 48V34.6L5.6 38z"/>
-                  <path fill="#4285F4" d="M5.6 38L14 24H.1A24 24 0 0 0 5.6 38z"/>
-                  <path fill="#34A853" d="M24 34.6V48a24 24 0 0 0 18.4-10L24 34.6z"/>
-                  <path fill="#EA4335" d="M42.4 38L34 24h8.4A24 24 0 0 1 24 48v-1.4l18.4-8.6z"/>
-                  <circle cx="24" cy="24" r="8" fill="#fff"/>
-                  <circle cx="24" cy="24" r="6" fill="#4285F4"/>
+                <svg width="34" height="34" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  {/* Outer colored ring */}
+                  <path fill="#EA4335" d="M24 4C13 4 4 13 4 24c0 5.3 2 10.1 5.4 13.7L20.8 18H24c3.3 0 6.3 1.7 8 4.4l.1.2L44 13.3A19.9 19.9 0 0 0 24 4z"/>
+                  <path fill="#FBBC05" d="M9.4 37.7A20 20 0 0 0 24 44c8.8 0 16.4-5.7 19.2-13.6L31.5 22.5A9.9 9.9 0 0 1 24 34a10 10 0 0 1-8.6-4.9L9.4 37.7z"/>
+                  <path fill="#4285F4" d="M44 13.3l-11 9.3-.1-.2A10 10 0 0 0 24 18h-3.2L9.4 37.7 4 24C4 13 13 4 24 4a19.9 19.9 0 0 1 20 9.3z"/>
+                  {/* White inner circle */}
+                  <circle cx="24" cy="24" r="10" fill="white"/>
+                  {/* Blue inner circle */}
+                  <circle cx="24" cy="24" r="7" fill="#4285F4"/>
                 </svg>
               </div>
               <span className="text-white text-[11px] font-black">Chrome</span>
@@ -118,8 +115,6 @@ export const InAppBrowserNotice = () => {
           >
             ‹ Back in Facebook
           </button>
-
-          {/* Go Now = Default browser */}
           <a
             href={defaultHref}
             className="flex-1 py-3 rounded-2xl bg-[#27ae60] text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-900/40 active:scale-95 transition-transform"
