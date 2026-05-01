@@ -7,11 +7,11 @@ function isWebView(): boolean {
   if (typeof window === 'undefined') return false;
   const ua = navigator.userAgent || '';
   return (
-    /FBAN|FBAV|FB_IAB|FB4A|FBIOS/.test(ua) ||   // Facebook / FB Lite
-    /Instagram/.test(ua) ||                        // Instagram
-    /Twitter/.test(ua) ||                          // Twitter
-    /Line\//.test(ua) ||                           // LINE
-    /\bwv\b/.test(ua) ||                           // Generic Android WebView flag
+    /FBAN|FBAV|FB_IAB|FB4A|FBIOS/.test(ua) ||
+    /Instagram/.test(ua) ||
+    /Twitter/.test(ua) ||
+    /Line\//.test(ua) ||
+    /\bwv\b/.test(ua) ||
     /WebView/.test(ua) ||
     (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome/.test(ua))
   );
@@ -28,7 +28,7 @@ export default function SignIn() {
   }, []);
 
   const handleLogin = async () => {
-    if (isWebView()) return; // safety guard
+    if (isWebView()) return;
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -45,7 +45,6 @@ export default function SignIn() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // fallback – select a textarea
       const ta = document.createElement('textarea');
       ta.value = pageUrl;
       document.body.appendChild(ta);
@@ -60,7 +59,7 @@ export default function SignIn() {
   // ── WebView blocked screen ──
   if (inWebView) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-[#0a0a0a] text-center">
         <img
           src="/kumpuni-go-logo.png"
           alt="Kumpuni Go"
@@ -69,19 +68,21 @@ export default function SignIn() {
 
         <div className="text-5xl mb-4">🚫</div>
 
-        <h1 className="text-[#1a3a3a] font-black text-lg uppercase italic mb-2">
+        <h1 className="text-theme font-black text-lg uppercase italic mb-2">
           Open in Chrome or Safari
         </h1>
-        <p className="text-gray-500 text-[12px] font-bold max-w-xs leading-relaxed mb-6">
-          Google Sign-In is blocked inside <span className="text-[#1a3a3a]">Facebook, Messenger,
-          Instagram</span> and other in-app browsers.
+        <p className="text-muted text-[12px] font-bold max-w-xs leading-relaxed mb-6">
+          Google Sign-In is blocked inside{' '}
+          <span className="text-theme font-black">Facebook, Messenger, Instagram</span>{' '}
+          and other in-app browsers.
           <br /><br />
-          Copy the link below and paste it in <span className="text-[#1a3a3a]">Chrome</span> or your
+          Copy the link below and paste it in{' '}
+          <span className="text-theme font-black">Chrome</span> or your
           phone&apos;s default browser to sign in.
         </p>
 
         {/* URL box */}
-        <div className="w-full max-w-sm bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 mb-3 break-all text-[11px] font-bold text-gray-500 text-left">
+        <div className="w-full max-w-sm bg-gray-50 dark:bg-[#1f1f1f] border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-3 mb-3 break-all text-[11px] font-bold text-muted text-left">
           {pageUrl}
         </div>
 
@@ -90,17 +91,17 @@ export default function SignIn() {
           className={`w-full max-w-sm py-4 rounded-2xl font-black uppercase text-sm shadow-md transition-all active:scale-95 ${
             copied
               ? 'bg-[#27ae60] text-white shadow-green-200'
-              : 'bg-[#1a3a3a] text-white shadow-gray-200'
+              : 'bg-[#27ae60] text-white shadow-green-900/30'
           }`}
         >
           {copied ? '✅ Link Copied!' : '📋 Copy Link'}
         </button>
 
-        <div className="mt-6 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 w-full max-w-sm text-left">
-          <p className="text-amber-700 font-black text-[11px] uppercase tracking-wide mb-2">
+        <div className="mt-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-700/40 rounded-2xl px-5 py-4 w-full max-w-sm text-left">
+          <p className="text-amber-700 dark:text-amber-400 font-black text-[11px] uppercase tracking-wide mb-2">
             How to open in Chrome
           </p>
-          <ol className="text-amber-600 text-[11px] font-bold space-y-1 list-decimal list-inside">
+          <ol className="text-amber-600 dark:text-amber-300 text-[11px] font-bold space-y-1 list-decimal list-inside">
             <li>Tap <strong>Copy Link</strong> above</li>
             <li>Open <strong>Chrome</strong> (or Safari on iPhone)</li>
             <li>Paste the link in the address bar</li>
@@ -113,31 +114,31 @@ export default function SignIn() {
 
   // ── Normal sign-in screen ──
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-[#0a0a0a] text-center">
       <img
         src="/kumpuni-go-logo.png"
         alt="Kumpuni Go"
         className="w-20 h-20 rounded-full object-cover mb-6"
       />
-      <h1 className="text-xl font-black text-[#1a3a3a] mb-1 uppercase italic">Kumpuni Go!</h1>
+      <h1 className="text-xl font-black text-theme mb-1 uppercase italic">Kumpuni Go!</h1>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 mb-6 w-full max-w-sm">
-        <p className="text-amber-700 font-black text-[11px] uppercase tracking-wide">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl px-5 py-3 mb-6 w-full max-w-sm">
+        <p className="text-amber-700 dark:text-amber-400 font-black text-[11px] uppercase tracking-wide">
           🔒 Anti-Scam Verification
         </p>
-        <p className="text-amber-600 text-[10px] font-bold mt-1">
+        <p className="text-amber-600 dark:text-amber-300 text-[10px] font-bold mt-1">
           Gmail sign-in is required to ensure all contributions are real and traceable.
         </p>
       </div>
 
-      <h2 className="text-lg font-black text-[#1a3a3a] mb-2 uppercase italic">Sign in to Continue</h2>
-      <p className="text-gray-400 text-[11px] font-bold mb-8 uppercase">
+      <h2 className="text-lg font-black text-theme mb-2 uppercase italic">Sign in to Continue</h2>
+      <p className="text-muted text-[11px] font-bold mb-8 uppercase">
         Secure • Free • Required for contribution
       </p>
 
       <button
         onClick={handleLogin}
-        className="w-full max-w-sm bg-[#1a3a3a] text-white p-5 rounded-2xl font-black uppercase text-sm shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+        className="w-full max-w-sm bg-[#27ae60] hover:bg-[#219150] text-white p-5 rounded-2xl font-black uppercase text-sm shadow-lg shadow-green-900/30 flex items-center justify-center gap-3 active:scale-95 transition-all"
       >
         <svg width="20" height="20" viewBox="0 0 48 48" className="flex-shrink-0">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.2 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.2 17.8 9.5 24 9.5z"/>
@@ -150,7 +151,7 @@ export default function SignIn() {
 
       <button
         onClick={() => router.back()}
-        className="mt-4 text-gray-400 text-[11px] font-bold underline"
+        className="mt-4 text-muted text-[11px] font-bold underline"
       >
         Cancel
       </button>
