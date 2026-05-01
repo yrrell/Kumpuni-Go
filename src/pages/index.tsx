@@ -319,7 +319,7 @@ export default function App() {
               ))}
             </div>
 
-            <p className="text-gray-500 font-black text-xs tracking-[0.2em] uppercase pl-1">
+            <p className="text-gray-500 font-black text-xs tracking-[0.1em] uppercase pl-1">
               {filtered.length} shop{filtered.length !== 1 ? 's' : ''} — Open First, Nearest Priority
             </p>
 
