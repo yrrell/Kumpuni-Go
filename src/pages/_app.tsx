@@ -3,6 +3,7 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { LocationProvider } from '../context/LocationContext';
+import { InAppBrowserNotice } from '../components/ui/InAppBrowserNotice';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -16,6 +17,8 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0a0a] text-[#1a3a3a] dark:text-white transition-colors duration-300">
         <Component {...pageProps} />
       </div>
+      {/* Shows popup only when opened inside Facebook, Messenger, Instagram, etc. */}
+      <InAppBrowserNotice />
     </LocationProvider>
   );
 }
