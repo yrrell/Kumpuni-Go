@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 export const LoadingScreen = () => {
   const [progress, setProgress] = useState(20);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [showCopyFallback, setShowCopyFallback] = useState(false);
+  const [intentHref, setIntentHref] = useState('');
+  const [pageUrl, setPageUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -16,70 +17,41 @@ export const LoadingScreen = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
     const ua = navigator.userAgent || '';
     const detected = /FBAN|FBAV|FB_IAB|FB4A|FBIOS|Instagram|Messenger|\[FB\]/i.test(ua);
     setIsInAppBrowser(detected);
-  }, []);
 
-  const handleOpenInBrowser = () => {
-    const url = window.location.href;
-    const host = window.location.host;
-    const path = window.location.pathname + window.location.search + window.location.hash;
-
-    // ── Method 1: Android intent via anchor click ──
-    // Creates a real DOM click (user-gesture), more likely to pass FB's restrictions
-    try {
-      const intentUrl =
+    if (detected) {
+      const url = window.location.href;
+      const host = window.location.host;
+      const path = window.location.pathname + window.location.search + window.location.hash;
+      setPageUrl(url);
+      // Build intent URL once so <a href> can use it directly — no JS navigation at all
+      setIntentHref(
         `intent://${host}${path}` +
         `#Intent;scheme=https;` +
         `action=android.intent.action.VIEW;` +
         `category=android.intent.category.BROWSABLE;` +
-        `S.browser_fallback_url=${encodeURIComponent(url)};end`;
-
-      const a = document.createElement('a');
-      a.href = intentUrl;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (_) { /* ignore */ }
-
-    // ── Method 2: window.open with _system (Cordova / hybrid fallback) ──
-    setTimeout(() => {
-      if (document.hidden) return; // Method 1 already worked
-      try { window.open(url, '_system'); } catch (_) { /* ignore */ }
-    }, 600);
-
-    // ── Method 3: window.open _blank ──
-    setTimeout(() => {
-      if (document.hidden) return;
-      try { window.open(url, '_blank', 'noopener,noreferrer'); } catch (_) { /* ignore */ }
-    }, 1000);
-
-    // ── Fallback: show copy-link UI if still on the page ──
-    setTimeout(() => {
-      if (!document.hidden) setShowCopyFallback(true);
-    }, 1600);
-  };
+        `S.browser_fallback_url=${encodeURIComponent(url)};end`
+      );
+    }
+  }, []);
 
   const handleCopy = async () => {
-    const url = window.location.href;
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (_) {
-      // Manual select fallback
+      await navigator.clipboard.writeText(pageUrl);
+    } catch {
       const ta = document.createElement('textarea');
-      ta.value = url;
+      ta.value = pageUrl;
       ta.style.cssText = 'position:fixed;opacity:0';
       document.body.appendChild(ta);
       ta.focus(); ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
@@ -98,7 +70,7 @@ export const LoadingScreen = () => {
         <span className="text-[#27ae60] italic">Go!</span>
       </h1>
 
-      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-10">
+      <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-10">
         Find Nearest · Vulcanizing · Motorshop
       </p>
 
@@ -116,8 +88,10 @@ export const LoadingScreen = () => {
       </p>
 
       {/* ── In-App Browser Banner ── */}
-      {isInAppBrowser && !showCopyFallback && (
+      {isInAppBrowser && (
         <div className="absolute bottom-0 left-0 right-0 bg-[#1a2e2e] border-t border-white/10 rounded-t-3xl p-6 shadow-2xl">
+
+          {/* Header */}
           <div className="flex items-start gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-yellow-400 text-lg">📍</span>
@@ -125,63 +99,48 @@ export const LoadingScreen = () => {
             <div>
               <p className="text-white font-black text-sm mb-1">Inaccurate Location Detected</p>
               <p className="text-white/60 text-xs font-bold leading-relaxed">
-                You&apos;re inside <span className="text-white font-black">Facebook</span>&apos;s browser.
-                GPS is limited here — tap{' '}
-                <span className="text-[#27ae60] font-black">Go Now</span> to open in your
-                device&apos;s browser for precise location.
+                You&apos;re inside <span className="text-white font-black">Facebook</span>&apos;s
+                browser. GPS is limited here — open in your device&apos;s browser for precise location.
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setIsInAppBrowser(false)}
-              className="flex-1 py-3 rounded-2xl border border-white/20 text-white/70 font-black text-sm"
-            >
-              ‹ Back in Facebook
-            </button>
-            <button
-              onClick={handleOpenInBrowser}
-              className="flex-1 py-3 rounded-2xl bg-[#27ae60] text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-900/40 active:scale-95 transition-transform"
-            >
-              <span>🌐</span> Go Now
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* ── Copy-Link Fallback (shown when all redirect methods fail) ── */}
-      {isInAppBrowser && showCopyFallback && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#1a2e2e] border-t border-white/10 rounded-t-3xl p-6 shadow-2xl">
-          <p className="text-white font-black text-sm mb-1">Open Manually in Your Browser</p>
-          <p className="text-white/50 text-xs font-bold leading-relaxed mb-4">
-            Facebook blocked the redirect. Copy the link below and paste it in Chrome or your default browser.
-          </p>
+          {/* Primary action: real <a> tag — not a button, not JS navigation */}
+          {/* Facebook WebView cannot block a direct anchor tap the same way */}
+          <a
+            href={intentHref}
+            className="block w-full py-3.5 rounded-2xl bg-[#27ae60] text-white font-black text-sm text-center shadow-lg shadow-green-900/40 active:scale-95 transition-transform mb-3"
+          >
+            🌐 Open in Browser (Go Now)
+          </a>
 
-          {/* URL box */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 mb-4 break-all">
-            <p className="text-[#27ae60] text-xs font-black select-all">
-              {typeof window !== 'undefined' ? window.location.href : ''}
+          {/* URL copy row — always visible, no waiting */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-2">
+            <p className="flex-1 text-[#27ae60] text-[10px] font-black truncate select-all">
+              {pageUrl}
             </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowCopyFallback(false)}
-              className="flex-1 py-3 rounded-2xl border border-white/20 text-white/70 font-black text-sm"
-            >
-              ‹ Back
-            </button>
             <button
               onClick={handleCopy}
-              className={`flex-1 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-all ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-xl font-black text-[10px] transition-all active:scale-95 ${
                 copied
-                  ? 'bg-white/20 text-white/70'
-                  : 'bg-[#27ae60] text-white shadow-lg shadow-green-900/40'
+                  ? 'bg-white/20 text-white/60'
+                  : 'bg-white/10 text-white'
               }`}
             >
-              {copied ? '✅ Copied!' : '📋 Copy Link'}
+              {copied ? '✅ Copied' : '📋 Copy'}
             </button>
           </div>
+
+          <p className="text-white/30 text-[10px] font-bold text-center mb-3">
+            If the button doesn&apos;t work — copy the link above and paste it in Chrome.
+          </p>
+
+          <button
+            onClick={() => setIsInAppBrowser(false)}
+            className="w-full py-2.5 rounded-2xl border border-white/10 text-white/40 font-black text-xs"
+          >
+            ‹ Continue anyway (inaccurate location)
+          </button>
         </div>
       )}
     </div>
