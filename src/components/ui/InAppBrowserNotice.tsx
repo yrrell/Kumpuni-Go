@@ -1,7 +1,7 @@
 // src/components/ui/InAppBrowserNotice.tsx
 import React, { useEffect, useState } from 'react';
 
-/** Returns the device platform (ios or android). */
+/** Returns 'ios' or 'android' based on the user-agent. */
 function detectPlatform(): 'ios' | 'android' {
   if (typeof window === 'undefined') return 'android';
   const ua = navigator.userAgent || '';
@@ -12,36 +12,53 @@ function detectPlatform(): 'ios' | 'android' {
  * Detects which in-app browser the user is inside.
  * Returns the platform name string, or null if NOT inside an in-app browser.
  *
- * Detection order matters — put more-specific tokens first so that, e.g.,
- * Instagram (which also carries FB tokens) is labelled "Instagram" not "Facebook".
+ * Order matters — more-specific tokens are checked first so that Instagram
+ * (which also carries FB tokens) is labelled "Instagram", not "Facebook".
  */
 function detectInAppBrowserPlatform(): string | null {
   if (typeof window === 'undefined') return null;
   const ua = navigator.userAgent || '';
 
-  // --- Meta family ---
-  if (/Instagram/i.test(ua))                              return 'Instagram';
-  if (/Messenger/i.test(ua))                              return 'Messenger';
-  if (/FBAN|FBAV|FB_IAB|FB4A|FBIOS|\[FB\]/i.test(ua))   return 'Facebook';
+  // Meta family
+  if (/Instagram/i.test(ua))                            return 'Instagram';
+  if (/Messenger/i.test(ua))                            return 'Messenger';
+  if (/FBAN|FBAV|FB_IAB|FB4A|FBIOS|\[FB\]/i.test(ua)) return 'Facebook';
 
-  // --- Other major apps ---
-  if (/TikTok/i.test(ua))                                return 'TikTok';
-  if (/Twitter|XCorp/i.test(ua))                         return 'X (Twitter)';
-  if (/Snapchat/i.test(ua))                              return 'Snapchat';
-  if (/Pinterest/i.test(ua))                             return 'Pinterest';
-  if (/LinkedIn/i.test(ua))                              return 'LinkedIn';
-  if (/Line\//i.test(ua))                                return 'LINE';
-  if (/MicroMessenger|WeChat/i.test(ua))                 return 'WeChat';
-  if (/Telegram/i.test(ua))                              return 'Telegram';
-  if (/WhatsApp/i.test(ua))                              return 'WhatsApp';
-  if (/Reddit/i.test(ua))                                return 'Reddit';
-  if (/Discord/i.test(ua))                               return 'Discord';
-
-  // Generic WebView signals (catch-all for other in-app browsers)
-  if (/wv\)|; wv\)/i.test(ua) || /Version\/\d+\.\d+ .*(Mobile)?.*Safari/i.test(ua) === false)
-    return null; // could be a real browser; don't flag
+  // Other major apps
+  if (/TikTok/i.test(ua))                              return 'TikTok';
+  if (/Twitter|XCorp/i.test(ua))                       return 'X (Twitter)';
+  if (/Snapchat/i.test(ua))                            return 'Snapchat';
+  if (/Pinterest/i.test(ua))                           return 'Pinterest';
+  if (/LinkedIn/i.test(ua))                            return 'LinkedIn';
+  if (/Line\//i.test(ua))                              return 'LINE';
+  if (/MicroMessenger|WeChat/i.test(ua))               return 'WeChat';
+  if (/Telegram/i.test(ua))                            return 'Telegram';
+  if (/WhatsApp/i.test(ua))                            return 'WhatsApp';
+  if (/Reddit/i.test(ua))                              return 'Reddit';
+  if (/Discord/i.test(ua))                             return 'Discord';
 
   return null;
+}
+
+/**
+ * Returns the deep-link URI to re-open the native app so we have a
+ * fallback if window.close() is silently blocked by the WebView.
+ */
+function getNativeAppScheme(platformName: string): string | null {
+  switch (platformName) {
+    case 'Instagram':   return 'instagram://';
+    case 'Messenger':   return 'fb-messenger://';
+    case 'Facebook':    return 'fb://';
+    case 'TikTok':      return 'snssdk1233://';
+    case 'X (Twitter)': return 'twitter://';
+    case 'Snapchat':    return 'snapchat://';
+    case 'Pinterest':   return 'pinterest://';
+    case 'LinkedIn':    return 'linkedin://';
+    case 'LINE':        return 'line://';
+    case 'WeChat':      return 'weixin://';
+    case 'WhatsApp':    return 'whatsapp://';
+    default:            return null;
+  }
 }
 
 export const InAppBrowserNotice = () => {
@@ -51,13 +68,13 @@ export const InAppBrowserNotice = () => {
 
   useEffect(() => {
     const detected = detectInAppBrowserPlatform();
-    if (!detected) return;          // not an in-app browser — do nothing
+    if (!detected) return;
     setPlatform(detected);
 
-    const url      = window.location.href;
-    const host     = window.location.host;
-    const path     = window.location.pathname + window.location.search + window.location.hash;
-    const device   = detectPlatform();
+    const url    = window.location.href;
+    const host   = window.location.host;
+    const path   = window.location.pathname + window.location.search + window.location.hash;
+    const device = detectPlatform();
 
     if (device === 'ios') {
       setChromeHref(`googlechromes://${host}${path}`);
@@ -69,26 +86,39 @@ export const InAppBrowserNotice = () => {
     }
   }, []);
 
-  // Not an in-app browser — render nothing
   if (!platform) return null;
 
   /**
-   * Force-navigate back to the previous screen inside the in-app browser.
-   * history.back() is the reliable cross-platform way; the fallback closes
-   * the modal so the UI doesn't get stuck.
+   * EXIT the in-app browser and return the user to the native app.
+   *
+   * Strategy (in order):
+   *  1. window.close()  — closes the WebView tab in Instagram, Messenger, etc.
+   *  2. Deep-link URI   — re-launches the native app as a fallback (300 ms delay
+   *                       gives the close time to fire first).
+   *  3. about:blank     — last resort so the user is not stuck on LoadingScreen.
    */
   const handleGoBack = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      // No history to go back to — just dismiss the notice
-      setPlatform(null);
-    }
+    // 1. Try to close the WebView entirely
+    window.close();
+
+    // 2. If still here after 300 ms, redirect to the native app via deep link
+    setTimeout(() => {
+      if (document.hidden) return; // window.close() already worked
+
+      const scheme = getNativeAppScheme(platform);
+      if (scheme) {
+        window.location.href = scheme;
+        return;
+      }
+
+      // 3. Generic last resort — blank the page so it is not stuck on loading
+      window.location.href = 'about:blank';
+    }, 300);
   };
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
-      {/* Dim backdrop — tapping it goes back, same as the button */}
+      {/* Dim backdrop — tapping it triggers the same exit */}
       <div className="absolute inset-0 bg-black/60" onClick={handleGoBack} />
 
       {/* Bottom sheet */}
@@ -155,7 +185,7 @@ export const InAppBrowserNotice = () => {
         {/* Bottom action row */}
         <div className="flex gap-3">
 
-          {/* ← Back in [Platform] — forces real navigation back */}
+          {/* Back in [Platform] — exits the WebView and returns to the native app */}
           <button
             onClick={handleGoBack}
             className="flex-1 py-3 rounded-2xl border border-white/20 text-white/60 font-black text-sm"
