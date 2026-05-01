@@ -2,6 +2,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  devIndicators: false,   // ← removes the floating dev button on every page
   images: {
     domains: [
       'lh3.googleusercontent.com', // Google profile pictures
