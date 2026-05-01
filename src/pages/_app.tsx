@@ -15,6 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/kumpuni-go-logo.png" />
       </Head>
       <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0a0a] text-[#1a3a3a] dark:text-white transition-colors duration-300">
+        <InAppBrowserNotice />
         <Component {...pageProps} />
       </div>
     </LocationProvider>
