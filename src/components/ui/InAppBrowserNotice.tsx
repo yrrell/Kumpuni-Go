@@ -74,17 +74,12 @@ export const InAppBrowserNotice = () => {
               href={chromeHref}
               className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
-                <svg width="34" height="34" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  {/* Outer colored ring */}
-                  <path fill="#EA4335" d="M24 4C13 4 4 13 4 24c0 5.3 2 10.1 5.4 13.7L20.8 18H24c3.3 0 6.3 1.7 8 4.4l.1.2L44 13.3A19.9 19.9 0 0 0 24 4z"/>
-                  <path fill="#FBBC05" d="M9.4 37.7A20 20 0 0 0 24 44c8.8 0 16.4-5.7 19.2-13.6L31.5 22.5A9.9 9.9 0 0 1 24 34a10 10 0 0 1-8.6-4.9L9.4 37.7z"/>
-                  <path fill="#4285F4" d="M44 13.3l-11 9.3-.1-.2A10 10 0 0 0 24 18h-3.2L9.4 37.7 4 24C4 13 13 4 24 4a19.9 19.9 0 0 1 20 9.3z"/>
-                  {/* White inner circle */}
-                  <circle cx="24" cy="24" r="10" fill="white"/>
-                  {/* Blue inner circle */}
-                  <circle cx="24" cy="24" r="7" fill="#4285F4"/>
-                </svg>
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden">
+                <img
+                  src="/assets/chrome.png"
+                  alt="Chrome"
+                  className="w-10 h-10 object-contain"
+                />
               </div>
               <span className="text-white text-[11px] font-black">Chrome</span>
             </a>
