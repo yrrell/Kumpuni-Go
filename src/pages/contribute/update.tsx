@@ -374,7 +374,7 @@ export default function UpdateShop() {
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Selected shop banner */}
-            <div className="bg-green-50 rounded-2xl p-4">
+            <div className="bg-green-50 dark:bg-[#0d2b1a] border border-green-100 dark:border-green-800/40 rounded-2xl p-4">
               <p className="text-[10px] font-black text-[#27ae60] uppercase">Updating:</p>
               <p className="text-theme font-black uppercase">{selectedShop.name}</p>
               <button type="button" onClick={() => { setSelectedShop(null); setSelectedChanges([]); }}
