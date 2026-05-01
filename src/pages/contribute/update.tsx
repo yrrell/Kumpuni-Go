@@ -325,13 +325,13 @@ export default function UpdateShop() {
 
   // ── Success screen ──
   if (submitted) return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white dark:bg-[#0a0a0a] text-center">
       <CheckCircle size={64} className="text-[#27ae60] mb-4" />
-      <h2 className="text-2xl font-black text-[#1a3a3a] uppercase italic mb-2">Update Submitted!</h2>
-      <p className="text-gray-400 font-bold text-sm mb-2">
+      <h2 className="text-2xl font-black text-theme uppercase italic mb-2">Update Submitted!</h2>
+      <p className="text-muted font-bold text-sm mb-2">
         Your update for <strong>&quot;{selectedShop?.name}&quot;</strong> is pending review.
       </p>
-      <p className="text-gray-400 text-xs mb-8">📧 Confirmation sent to <strong>{user?.email}</strong></p>
+      <p className="text-muted text-xs mb-8">📧 Confirmation sent to <strong>{user?.email}</strong></p>
       <button onClick={() => router.push('/')}
         className="w-full max-w-xs bg-[#27ae60] text-white py-4 rounded-2xl font-black uppercase">
         Back to Home
@@ -342,31 +342,31 @@ export default function UpdateShop() {
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
       {/* Header */}
-      <div className="bg-white px-5 py-4 flex items-center gap-3 border-b border-gray-50 sticky top-0 z-50">
-        <button onClick={() => router.back()} className="text-gray-400"><ChevronLeft size={22} /></button>
-        <h1 className="text-[#1a3a3a] font-black text-base uppercase italic">Update Shop</h1>
+      <div className="bg-white dark:bg-[#0a0a0a] px-5 py-4 flex items-center gap-3 border-b border-gray-100 dark:border-white/10 sticky top-0 z-50">
+        <button onClick={() => router.back()} className="text-muted"><ChevronLeft size={22} /></button>
+        <h1 className="text-theme font-black text-base uppercase italic">Update Shop</h1>
       </div>
 
       <div className="p-5 space-y-4">
         {!selectedShop ? (
           <>
-            <p className="text-gray-400 text-xs font-bold uppercase">Search and select the shop to update:</p>
+            <p className="text-muted text-xs font-bold uppercase">Search and select the shop to update:</p>
             <div className="relative">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search shop name or barangay..."
-                className="w-full pl-10 pr-4 py-4 bg-white rounded-2xl text-sm font-bold text-[#1a3a3a] border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
+                className="w-full pl-10 pr-4 py-4 bg-white dark:bg-[#1f1f1f] rounded-2xl text-sm font-bold text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]" />
             </div>
             <div className="space-y-3">
               {filteredShops.slice(0, 15).map(shop => (
                 <button key={shop.id} onClick={() => selectShop(shop)}
-                  className="w-full text-left bg-white rounded-2xl p-4 border border-gray-100 active:bg-gray-50">
-                  <p className="text-[#1a3a3a] font-black text-sm uppercase">{shop.name}</p>
-                  <p className="text-gray-400 text-[11px] font-bold">{shop.brgy} • {shop.type}</p>
+                  className="w-full text-left bg-white dark:bg-[#1f1f1f] rounded-2xl p-4 border border-gray-100 dark:border-white/10 active:bg-gray-50 dark:active:bg-[#2a2a2a]">
+                  <p className="text-theme font-black text-sm uppercase">{shop.name}</p>
+                  <p className="text-muted text-[11px] font-bold">{shop.brgy} • {shop.type}</p>
                 </button>
               ))}
               {filteredShops.length === 0 && (
-                <p className="text-center text-gray-300 font-bold text-sm py-8">No shops found.</p>
+                <p className="text-center text-muted font-bold text-sm py-8">No shops found.</p>
               )}
             </div>
           </>
@@ -376,14 +376,14 @@ export default function UpdateShop() {
             {/* Selected shop banner */}
             <div className="bg-green-50 rounded-2xl p-4">
               <p className="text-[10px] font-black text-[#27ae60] uppercase">Updating:</p>
-              <p className="text-[#1a3a3a] font-black uppercase">{selectedShop.name}</p>
+              <p className="text-theme font-black uppercase">{selectedShop.name}</p>
               <button type="button" onClick={() => { setSelectedShop(null); setSelectedChanges([]); }}
-                className="text-[10px] text-gray-400 underline mt-1">Change shop</button>
+                className="text-[10px] text-muted underline mt-1">Change shop</button>
             </div>
 
             {/* What changed? */}
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase pl-1 block mb-2">
+              <label className="text-[10px] font-black text-muted uppercase pl-1 block mb-2">
                 What Changed? (select all that apply)
               </label>
               <div className="space-y-2">
@@ -392,7 +392,7 @@ export default function UpdateShop() {
                     className={`w-full text-left px-4 py-3 rounded-2xl font-bold text-[11px] border transition-all ${
                       selectedChanges.includes(opt.key)
                         ? 'bg-[#27ae60] text-white border-[#27ae60]'
-                        : 'bg-white text-gray-600 border-gray-100'
+                        : 'bg-white dark:bg-[#1f1f1f] text-theme border-gray-100 dark:border-white/10'
                     }`}>
                     {opt.label}
                   </button>
@@ -401,16 +401,16 @@ export default function UpdateShop() {
               {selectedChanges.includes('other') && (
                 <textarea placeholder="Describe what else changed..." value={otherNote}
                   onChange={e => setOtherNote(e.target.value)} rows={2}
-                  className="w-full mt-2 p-4 bg-white rounded-2xl font-bold text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60] resize-none" />
+                  className="w-full mt-2 p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold text-sm text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60] resize-none" />
               )}
             </div>
 
             {/* ── MOVE LOCATION MAP ── */}
             {selectedChanges.includes('location') && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase pl-1 block">📍 New Shop Location</label>
+                <label className="text-[10px] font-black text-muted uppercase pl-1 block">📍 New Shop Location</label>
                 <div className="bg-[#1a3a3a] rounded-2xl p-3">
-                  <p className="text-gray-400 text-[11px] font-bold leading-relaxed">
+                  <p className="text-muted text-[11px] font-bold leading-relaxed">
                     Drag the amber pin or tap the map to mark the new location.
                     Then tap <span className="text-[#f59e0b]">Pin Location</span> to confirm.
                   </p>
@@ -425,7 +425,7 @@ export default function UpdateShop() {
                   )}
                   {/* GPS target button */}
                   <button type="button" onClick={handleTargetLocation}
-                    className="absolute top-3 right-3 z-[1000] bg-white rounded-full p-2.5 shadow-lg border border-gray-200 active:scale-95">
+                    className="absolute top-3 right-3 z-[1000] bg-white dark:bg-[#1f1f1f] rounded-full p-2.5 shadow-lg border border-gray-200 dark:border-white/10 active:scale-95">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round">
                       <circle cx="12" cy="12" r="3" fill="#f59e0b" />
                       <circle cx="12" cy="12" r="8" />
@@ -441,7 +441,7 @@ export default function UpdateShop() {
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-[11px] uppercase shadow-lg transition-all active:scale-95 ${
                         pinConfirmed
                           ? 'bg-amber-500 text-white'
-                          : 'bg-white text-amber-500 border-2 border-amber-400'
+                          : 'bg-white dark:bg-[#1f1f1f] text-amber-500 border-2 border-amber-400'
                       }`}>
                       <MapPin size={14} />
                       {pinConfirmed ? '✓ Location Confirmed' : 'Pin Location'}
@@ -455,7 +455,7 @@ export default function UpdateShop() {
                     <p className="text-white font-black text-xs uppercase tracking-wide">
                       📍 Verify New Pin Location
                     </p>
-                    <p className="text-gray-400 text-[11px] font-bold leading-relaxed">
+                    <p className="text-muted text-[11px] font-bold leading-relaxed">
                       New pin is at <span className="text-[#f59e0b]">{pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}</span>.
                       Tap <span className="text-[#f59e0b]">View Pin</span> to open Google Maps and verify this is the correct new location.
                     </p>
@@ -465,7 +465,7 @@ export default function UpdateShop() {
                       <ExternalLink size={14} />
                       View Pin in Google Maps
                     </button>
-                    <p className="text-gray-500 text-[10px] font-bold text-center">
+                    <p className="text-muted text-[10px] font-bold text-center">
                       Are you sure this is the correct new location?
                     </p>
                     <div className="grid grid-cols-2 gap-3">
@@ -474,7 +474,7 @@ export default function UpdateShop() {
                         ✓ Yes, Confirm
                       </button>
                       <button type="button" onClick={handleEditPin}
-                        className="bg-white text-gray-600 border border-gray-200 py-3 rounded-xl font-black text-xs uppercase active:bg-gray-50">
+                        className="bg-white dark:bg-[#1f1f1f] text-theme border border-gray-200 dark:border-white/10 py-3 rounded-xl font-black text-xs uppercase active:bg-gray-50 dark:active:bg-[#2a2a2a]">
                         ← No, Edit Pin
                       </button>
                     </div>
@@ -487,10 +487,10 @@ export default function UpdateShop() {
                     <p className="text-[10px] text-amber-500 font-bold pl-1">✅ New location confirmed — address auto-filled ✓</p>
                     <input placeholder="MUNICIPALITY / CITY" value={form.municipality}
                       onChange={e => setForm({ ...form, municipality: e.target.value.toUpperCase() })}
-                      className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
+                      className="w-full p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold uppercase text-sm text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]" />
                     <input placeholder="PROVINCE" value={form.province}
                       onChange={e => setForm({ ...form, province: e.target.value.toUpperCase() })}
-                      className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
+                      className="w-full p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold uppercase text-sm text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]" />
                   </>
                 )}
               </div>
@@ -500,12 +500,12 @@ export default function UpdateShop() {
             {selectedChanges.includes('name') && (
               <input placeholder="NEW SHOP NAME *" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })}
-                className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
+                className="w-full p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold uppercase text-sm text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]" />
             )}
 
             {selectedChanges.includes('type') && (
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                className="w-full p-4 bg-white rounded-2xl font-black uppercase text-xs border border-gray-100 focus:outline-none focus:border-[#27ae60]">
+                className="w-full p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-black uppercase text-xs text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]">
                 <option value="Vulcanizing">🔧 Vulcanizing Shop</option>
                 <option value="Motorshop">🏍️ Motorshop</option>
                 <option value="Motorshop & Vulcanizing">⚙️ Motorshop &amp; Vulcanizing</option>
@@ -516,25 +516,25 @@ export default function UpdateShop() {
               <input placeholder="NEW CONTACT NUMBER (09XXXXXXXXX)" value={form.contact}
                 onChange={e => { if (e.target.value.length <= 11) setForm({ ...form, contact: e.target.value }); }}
                 type="tel" maxLength={11}
-                className="w-full p-4 bg-white rounded-2xl font-bold uppercase text-sm border border-gray-100 focus:outline-none focus:border-[#27ae60]" />
+                className="w-full p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold uppercase text-sm text-theme border border-gray-100 dark:border-white/10 focus:outline-none focus:border-[#27ae60]" />
             )}
 
             {selectedChanges.includes('hours') && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Opens at</label>
+                    <label className="text-[10px] font-black text-muted uppercase pl-1">Opens at</label>
                     <select value={form.openTime} onChange={e => setForm({ ...form, openTime: Number(e.target.value) })}
-                      className="w-full p-3 bg-white rounded-2xl font-bold text-sm border border-gray-100 mt-1">
+                      className="w-full p-3 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold text-sm text-theme border border-gray-100 dark:border-white/10 mt-1">
                       {Array.from({ length: 25 }, (_, i) => (
                         <option key={i} value={i}>{i === 0 ? '12:00 AM (24h)' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Closes at</label>
+                    <label className="text-[10px] font-black text-muted uppercase pl-1">Closes at</label>
                     <select value={form.closeTime} onChange={e => setForm({ ...form, closeTime: Number(e.target.value) })}
-                      className="w-full p-3 bg-white rounded-2xl font-bold text-sm border border-gray-100 mt-1">
+                      className="w-full p-3 bg-white dark:bg-[#1f1f1f] rounded-2xl font-bold text-sm text-theme border border-gray-100 dark:border-white/10 mt-1">
                       {Array.from({ length: 25 }, (_, i) => (
                         <option key={i} value={i}>{i === 0 || i === 24 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}</option>
                       ))}
@@ -542,12 +542,12 @@ export default function UpdateShop() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Work Days</label>
+                  <label className="text-[10px] font-black text-muted uppercase pl-1">Work Days</label>
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {DAYS.map((day, i) => (
                       <button key={i} type="button" onClick={() => toggleDay(i)}
                         className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
-                          form.workDays.includes(i) ? 'bg-[#27ae60] text-white' : 'bg-gray-100 text-gray-400'
+                          form.workDays.includes(i) ? 'bg-[#27ae60] text-white' : 'bg-gray-100 dark:bg-[#2a2a2a] text-muted'
                         }`}>{day}</button>
                     ))}
                   </div>
@@ -557,7 +557,7 @@ export default function UpdateShop() {
 
             {/* ── Evidence Photo ── */}
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Evidence Photo (optional)</label>
+              <label className="text-[10px] font-black text-muted uppercase pl-1">Evidence Photo (optional)</label>
               <div className="bg-blue-50 rounded-2xl p-3 mt-1 mb-2">
                 <p className="text-blue-600 text-[11px] font-bold leading-relaxed">
                   📸 Upload a photo showing the change to help the admin verify faster.
@@ -566,7 +566,7 @@ export default function UpdateShop() {
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleEvidenceChange} className="hidden" />
               <button type="button" onClick={() => fileInputRef.current?.click()}
-                className="mt-1 w-full border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden active:bg-gray-50">
+                className="mt-1 w-full border-2 border-dashed border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden active:bg-gray-50 dark:active:bg-[#1f1f1f]">
                 {evidencePreview ? (
                   <div className="relative">
                     <img src={evidencePreview} alt="Evidence" className="w-full max-h-48 object-cover" />
@@ -576,7 +576,7 @@ export default function UpdateShop() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-2 text-gray-400 p-6">
+                  <div className="flex flex-col items-center gap-2 text-muted p-6">
                     <Camera size={28} />
                     <span className="text-[11px] font-black uppercase">Tap to Upload Photo</span>
                     <span className="text-[10px]">Photo showing the change</span>
@@ -590,7 +590,7 @@ export default function UpdateShop() {
 
             <button type="submit" disabled={loading}
               className={`w-full py-4 rounded-2xl font-black uppercase text-sm shadow-lg transition-all ${
-                loading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-amber-500 text-white shadow-amber-200 active:scale-95'
+                loading ? 'bg-gray-200 dark:bg-[#2a2a2a] text-muted cursor-not-allowed' : 'bg-amber-500 text-white shadow-amber-200 active:scale-95'
               }`}>
               {loading ? 'Submitting...' : 'Submit Update'}
             </button>
